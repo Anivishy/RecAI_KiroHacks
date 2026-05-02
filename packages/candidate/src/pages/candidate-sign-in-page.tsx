@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { AppShell, SectionCard, appRoutes } from "@recai/shared";
+import { joinCandidateToPostingByInviteCode } from "@recai/recruiter/server/recruiter-jobs";
 import {
   getCandidateSession,
   isCandidateDatabaseConfigured,
@@ -9,6 +10,7 @@ import {
 type CandidateSignInPageProps = {
   searchParams: Promise<{
     error?: string | string[];
+    join?: string | string[];
     notice?: string | string[];
   }>;
 };
@@ -24,10 +26,16 @@ const errorMessages: Record<string, string> = {
     "Something went wrong while contacting candidate auth. Please try again.",
   "setup-required":
     "Candidate account access is temporarily unavailable. Please try again shortly.",
+  "invalid-invite":
+    "That recruiter invite code is no longer valid. Ask the recruiter for a fresh RecAI link.",
   "weak-password": "Choose a password with at least 8 characters.",
 };
 
 const noticeMessages: Record<string, string> = {
+  "already-joined":
+    "You were already part of that recruiter candidate pool, so we sent you back to your workspace.",
+  "joined-posting":
+    "You were added to the recruiter candidate pool linked from that posting.",
   "signed-out": "You have been signed out of the candidate workspace.",
 };
 
@@ -41,15 +49,31 @@ const inputClassName =
 export async function CandidateSignInPage({
   searchParams,
 }: CandidateSignInPageProps) {
+  const resolvedSearchParams = await searchParams;
+  const joinCode = readSearchParam(resolvedSearchParams.join);
+
   if (isCandidateDatabaseConfigured()) {
     const existingSession = await getCandidateSession();
 
     if (existingSession) {
+      if (joinCode) {
+        const result = await joinCandidateToPostingByInviteCode(
+          existingSession.id,
+          joinCode,
+        );
+
+        if (result.status === "invalid-invite") {
+          redirect(`${appRoutes.candidateDashboard}?error=invalid-invite`);
+        }
+
+        redirect(
+          `${appRoutes.candidateDashboard}?notice=${result.status === "joined" ? "joined-posting" : "already-joined"}`,
+        );
+      }
+
       redirect(appRoutes.candidateDashboard);
     }
   }
-
-  const resolvedSearchParams = await searchParams;
   const errorCode = readSearchParam(resolvedSearchParams.error);
   const noticeCode = readSearchParam(resolvedSearchParams.notice);
   const errorMessage = errorCode ? errorMessages[errorCode] : null;
@@ -70,6 +94,13 @@ export async function CandidateSignInPage({
       }
     >
       <div className="grid gap-4">
+        {joinCode ? (
+          <div className="rounded-[24px] border border-[rgba(15,118,110,0.24)] bg-[rgba(15,118,110,0.10)] px-5 py-4 text-sm leading-6 text-[var(--foreground)]">
+            Sign in or create an account to join the recruiter candidate pool linked from
+            that job posting.
+          </div>
+        ) : null}
+
         {errorMessage ? (
           <div className="rounded-[24px] border border-[rgba(220,38,38,0.22)] bg-[rgba(220,38,38,0.08)] px-5 py-4 text-sm leading-6 text-[var(--foreground)]">
             {errorMessage}
@@ -90,6 +121,7 @@ export async function CandidateSignInPage({
           description="Create a candidate account so you can manage your profile banner and the recommendations that appear on your public profile."
         >
           <form action="/api/candidate/auth/sign-up" className="grid gap-4" method="post">
+            {joinCode ? <input name="joinCode" type="hidden" value={joinCode} /> : null}
             <label className="text-sm font-semibold text-[var(--foreground)]">
               Full name
               <input
@@ -142,6 +174,7 @@ export async function CandidateSignInPage({
           description="Existing candidates sign in here and return to their workspace."
         >
           <form action="/api/candidate/auth/sign-in" className="grid gap-4" method="post">
+            {joinCode ? <input name="joinCode" type="hidden" value={joinCode} /> : null}
             <label className="text-sm font-semibold text-[var(--foreground)]">
               Email
               <input

@@ -4,6 +4,7 @@ import type { CandidateAccount, CandidateBanner } from "@recai/shared";
 type CandidateProfileHeroProps = {
   candidate: CandidateAccount;
   banner: CandidateBanner;
+  headline?: string | null;
 };
 
 function getInitials(fullName: string): string {
@@ -64,6 +65,7 @@ function buildPills(banner: CandidateBanner): Pill[] {
 export function CandidateProfileHero({
   candidate,
   banner,
+  headline,
 }: CandidateProfileHeroProps) {
   const initials = getInitials(candidate.fullName);
   const pills = buildPills(banner);
@@ -88,7 +90,9 @@ export function CandidateProfileHero({
                 {candidate.fullName}
               </h1>
               <p className="mt-2 text-sm italic leading-6 text-[var(--muted)]">
-                Your headline appears once verified recommendations are submitted.
+                {headline?.trim()
+                  ? headline
+                  : "Your headline appears once verified recommendations are submitted."}
               </p>
             </div>
           </div>

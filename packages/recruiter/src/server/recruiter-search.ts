@@ -1,5 +1,5 @@
 import { Pinecone } from "@pinecone-database/pinecone";
-import { sampleCandidateProfiles } from "@recai/shared/lib/domain/mock-data";
+import { getCandidateProfilesForPosting } from "@recai/candidate/server/candidate-profile-db";
 import type { CandidateProfile } from "@recai/shared";
 
 const INDEX_NAME = "candidates-vector-db";
@@ -83,10 +83,8 @@ function buildRecords(jobId: string, profile: CandidateProfile): CandidateRecord
   return records;
 }
 
-// For now, returns mock candidates. Replace with real Aurora query when
-// candidate profiles are stored in the database.
-async function getCandidatesForPosting(_jobId: string): Promise<CandidateProfile[]> {
-  return sampleCandidateProfiles;
+async function getCandidatesForPosting(jobId: string): Promise<CandidateProfile[]> {
+  return getCandidateProfilesForPosting(jobId);
 }
 
 export async function indexCandidatesForPosting(jobId: string): Promise<void> {

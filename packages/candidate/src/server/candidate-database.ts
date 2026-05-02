@@ -28,14 +28,21 @@ function getMissingAuroraEnvKeys() {
   return REQUIRED_AURORA_ENV_KEYS.filter((key) => !process.env[key]);
 }
 
+function isProvisioningHost(host: string | undefined) {
+  return !host || host === "provisioning";
+}
+
 function getAuroraConfig(): AuroraConfig {
   const missingKeys = getMissingAuroraEnvKeys();
 
-  if (missingKeys.length > 0) {
+  if (missingKeys.length > 0 || isProvisioningHost(process.env.PGHOST)) {
+    const missingDetails =
+      missingKeys.length > 0
+        ? `Missing environment variables: ${missingKeys.join(", ")}.`
+        : "The Aurora host is still provisioning.";
+
     throw new Error(
-      `RecAI candidate auth is not connected to Aurora PostgreSQL yet. Missing environment variables: ${missingKeys.join(
-        ", ",
-      )}. Accept the AWS marketplace install, attach Aurora to this Vercel project, then run \`vercel env pull\` locally.`,
+      `RecAI candidate auth is not connected to Aurora PostgreSQL yet. ${missingDetails} Wait for the AWS for Vercel resource to finish provisioning, then redeploy and run \`vercel env pull\` locally if needed.`,
     );
   }
 
@@ -50,7 +57,10 @@ function getAuroraConfig(): AuroraConfig {
 }
 
 export function isCandidateDatabaseConfigured() {
-  return getMissingAuroraEnvKeys().length === 0;
+  return (
+    getMissingAuroraEnvKeys().length === 0 &&
+    !isProvisioningHost(process.env.PGHOST)
+  );
 }
 
 function getPool() {

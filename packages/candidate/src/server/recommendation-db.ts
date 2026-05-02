@@ -1,5 +1,6 @@
 import { randomBytes, randomUUID } from "node:crypto";
-import { query, withConnection } from "@recai/recruiter/server/recruiter-database";
+import { query, withConnection } from "./candidate-database";
+import { ensureCandidateAuthSchema } from "./candidate-auth";
 
 export type RecommendationStatus = "pending" | "draft" | "submitted" | "deleted";
 
@@ -13,6 +14,8 @@ export type RecommendationProject = {
 export type RecommendationRequest = {
   id: string;
   token: string;
+  candidateId: string | null;
+  candidateSlug: string | null;
   candidateName: string;
   candidateContext: string;
   recommenderName: string;
@@ -33,6 +36,8 @@ export type RecommendationRequest = {
 type RecommendationRow = {
   id: string;
   token: string;
+  candidate_id: string | null;
+  candidate_slug: string | null;
   candidate_name: string;
   candidate_context: string;
   recommender_name: string;
@@ -54,6 +59,8 @@ function mapRow(row: RecommendationRow): RecommendationRequest {
   return {
     id: row.id,
     token: row.token,
+    candidateId: row.candidate_id,
+    candidateSlug: row.candidate_slug,
     candidateName: row.candidate_name,
     candidateContext: row.candidate_context,
     recommenderName: row.recommender_name,
@@ -78,6 +85,8 @@ export async function ensureRecommendationSchema() {
   if (schemaPromise) return schemaPromise;
 
   schemaPromise = (async () => {
+    await ensureCandidateAuthSchema();
+
     await withConnection(async (client) => {
       await client.query("BEGIN");
       try {
@@ -85,6 +94,8 @@ export async function ensureRecommendationSchema() {
           CREATE TABLE IF NOT EXISTS recommendation_requests (
             id TEXT PRIMARY KEY,
             token TEXT NOT NULL UNIQUE,
+            candidate_id TEXT REFERENCES candidate_accounts(id) ON DELETE CASCADE,
+            candidate_slug TEXT,
             candidate_name TEXT NOT NULL,
             candidate_context TEXT NOT NULL DEFAULT '',
             recommender_name TEXT NOT NULL DEFAULT '',
@@ -104,8 +115,24 @@ export async function ensureRecommendationSchema() {
           )
         `);
         await client.query(`
+          ALTER TABLE recommendation_requests
+          ADD COLUMN IF NOT EXISTS candidate_id TEXT REFERENCES candidate_accounts(id) ON DELETE CASCADE
+        `);
+        await client.query(`
+          ALTER TABLE recommendation_requests
+          ADD COLUMN IF NOT EXISTS candidate_slug TEXT
+        `);
+        await client.query(`
           CREATE INDEX IF NOT EXISTS recommendation_requests_token_idx
           ON recommendation_requests (token)
+        `);
+        await client.query(`
+          CREATE INDEX IF NOT EXISTS recommendation_requests_candidate_id_idx
+          ON recommendation_requests (candidate_id)
+        `);
+        await client.query(`
+          CREATE INDEX IF NOT EXISTS recommendation_requests_candidate_status_idx
+          ON recommendation_requests (candidate_id, status)
         `);
         await client.query("COMMIT");
       } catch (err) {
@@ -122,6 +149,8 @@ export async function ensureRecommendationSchema() {
 }
 
 export async function createRecommendationRequest(data: {
+  candidateId: string;
+  candidateSlug: string;
   candidateName: string;
   candidateContext?: string;
   recommenderName?: string;
@@ -138,13 +167,15 @@ export async function createRecommendationRequest(data: {
 
   const result = await query<RecommendationRow>(
     `INSERT INTO recommendation_requests (
-        id, token, candidate_name, candidate_context,
+        id, token, candidate_id, candidate_slug, candidate_name, candidate_context,
         recommender_name, recommender_email, recommender_title,
         recommender_company, relationship, expires_at
-      ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)
+      ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12)
       RETURNING *`,
     [
       id, token,
+      data.candidateId,
+      data.candidateSlug,
       data.candidateName,
       data.candidateContext ?? "",
       data.recommenderName ?? "",
@@ -228,4 +259,79 @@ export async function deleteRecommendation(token: string): Promise<boolean> {
     [token],
   );
   return (result.rowCount ?? 0) > 0;
+}
+
+export async function getRecommendationRequestsForCandidate(
+  candidateId: string,
+): Promise<RecommendationRequest[]> {
+  await ensureRecommendationSchema();
+
+  const result = await query<RecommendationRow>(
+    `
+      SELECT *
+      FROM recommendation_requests
+      WHERE candidate_id = $1
+      ORDER BY created_at DESC
+    `,
+    [candidateId],
+  );
+
+  return result.rows.map(mapRow);
+}
+
+export async function getSubmittedRecommendationsForCandidate(
+  candidateId: string,
+): Promise<RecommendationRequest[]> {
+  await ensureRecommendationSchema();
+
+  const result = await query<RecommendationRow>(
+    `
+      SELECT *
+      FROM recommendation_requests
+      WHERE candidate_id = $1
+        AND status = 'submitted'
+        AND deleted_at IS NULL
+      ORDER BY submitted_at DESC NULLS LAST, created_at DESC
+    `,
+    [candidateId],
+  );
+
+  return result.rows.map(mapRow);
+}
+
+export async function getSubmittedRecommendationsForCandidates(
+  candidateIds: string[],
+): Promise<Map<string, RecommendationRequest[]>> {
+  await ensureRecommendationSchema();
+
+  if (candidateIds.length === 0) {
+    return new Map();
+  }
+
+  const result = await query<RecommendationRow>(
+    `
+      SELECT *
+      FROM recommendation_requests
+      WHERE candidate_id = ANY($1::text[])
+        AND status = 'submitted'
+        AND deleted_at IS NULL
+      ORDER BY candidate_id, submitted_at DESC NULLS LAST, created_at DESC
+    `,
+    [candidateIds],
+  );
+
+  const grouped = new Map<string, RecommendationRequest[]>();
+
+  result.rows.forEach((row) => {
+    if (!row.candidate_id) {
+      return;
+    }
+
+    const recommendation = mapRow(row);
+    const existing = grouped.get(row.candidate_id) ?? [];
+    existing.push(recommendation);
+    grouped.set(row.candidate_id, existing);
+  });
+
+  return grouped;
 }

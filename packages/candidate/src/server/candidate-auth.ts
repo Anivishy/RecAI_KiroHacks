@@ -34,6 +34,12 @@ type CandidateAccountRow = {
   full_name: string;
   slug: string;
   password_hash: string;
+  headline: string | null;
+  current_role: string | null;
+  location: string | null;
+  years_experience: number | null;
+  target_roles: string[] | null;
+  bio: string | null;
   banner_email: string | null;
   banner_github_url: string | null;
   banner_linkedin_url: string | null;
@@ -53,6 +59,12 @@ type RegisterCandidateInput = {
   email: string;
   fullName: string;
   password: string;
+};
+
+type CandidateSessionResult = {
+  candidateId: string;
+  expiresAt: Date;
+  sessionToken: string;
 };
 
 class CandidateAuthError extends Error {
@@ -199,7 +211,7 @@ async function createCandidateSession(candidateId: string) {
     [randomUUID(), candidateId, hashSessionToken(sessionToken), expiresAt],
   );
 
-  return { sessionToken, expiresAt };
+  return { candidateId, sessionToken, expiresAt };
 }
 
 export async function ensureCandidateAuthSchema() {
@@ -219,6 +231,12 @@ export async function ensureCandidateAuthSchema() {
           full_name TEXT NOT NULL,
           slug TEXT NOT NULL UNIQUE,
           password_hash TEXT NOT NULL,
+          headline TEXT NOT NULL DEFAULT '',
+          "current_role" TEXT NOT NULL DEFAULT 'Candidate',
+          location TEXT NOT NULL DEFAULT '',
+          years_experience INTEGER NOT NULL DEFAULT 0,
+          target_roles JSONB NOT NULL DEFAULT '[]',
+          bio TEXT NOT NULL DEFAULT '',
           banner_email TEXT,
           banner_github_url TEXT,
           banner_linkedin_url TEXT,
@@ -226,6 +244,31 @@ export async function ensureCandidateAuthSchema() {
           created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
           updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
         )
+      `);
+
+      await client.query(`
+        ALTER TABLE candidate_accounts
+        ADD COLUMN IF NOT EXISTS headline TEXT NOT NULL DEFAULT ''
+      `);
+      await client.query(`
+        ALTER TABLE candidate_accounts
+        ADD COLUMN IF NOT EXISTS "current_role" TEXT NOT NULL DEFAULT 'Candidate'
+      `);
+      await client.query(`
+        ALTER TABLE candidate_accounts
+        ADD COLUMN IF NOT EXISTS location TEXT NOT NULL DEFAULT ''
+      `);
+      await client.query(`
+        ALTER TABLE candidate_accounts
+        ADD COLUMN IF NOT EXISTS years_experience INTEGER NOT NULL DEFAULT 0
+      `);
+      await client.query(`
+        ALTER TABLE candidate_accounts
+        ADD COLUMN IF NOT EXISTS target_roles JSONB NOT NULL DEFAULT '[]'
+      `);
+      await client.query(`
+        ALTER TABLE candidate_accounts
+        ADD COLUMN IF NOT EXISTS bio TEXT NOT NULL DEFAULT ''
       `);
 
       await client.query(`
@@ -262,7 +305,9 @@ export async function ensureCandidateAuthSchema() {
   return schemaBootstrapPromise;
 }
 
-export async function signUpCandidate(input: RegisterCandidateInput) {
+export async function signUpCandidate(
+  input: RegisterCandidateInput,
+): Promise<CandidateSessionResult> {
   if (!isCandidateDatabaseConfigured()) {
     throw new CandidateAuthError("setup-required");
   }
@@ -294,9 +339,10 @@ export async function signUpCandidate(input: RegisterCandidateInput) {
         await txClient.query(
           `
             INSERT INTO candidate_accounts (
-              id, email, normalized_email, full_name, slug, password_hash
+              id, email, normalized_email, full_name, slug, password_hash,
+              headline, "current_role", location, years_experience, target_roles, bio
             )
-            VALUES ($1, $2, $3, $4, $5, $6)
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11::jsonb, $12)
           `,
           [
             candidateId,
@@ -305,6 +351,12 @@ export async function signUpCandidate(input: RegisterCandidateInput) {
             fullName,
             candidateSlug,
             passwordHash,
+            `${fullName} is building a recommendation-backed profile on RecAI.`,
+            "Candidate",
+            "",
+            0,
+            JSON.stringify([]),
+            "This profile will get richer as verified recommendations are submitted.",
           ],
         );
         return "ok";
@@ -339,7 +391,10 @@ export async function signUpCandidate(input: RegisterCandidateInput) {
   return createCandidateSession(candidateId);
 }
 
-export async function signInCandidate(email: string, password: string) {
+export async function signInCandidate(
+  email: string,
+  password: string,
+): Promise<CandidateSessionResult> {
   if (!isCandidateDatabaseConfigured()) {
     throw new CandidateAuthError("setup-required");
   }

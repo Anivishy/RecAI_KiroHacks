@@ -25,25 +25,24 @@ There are three user types:
 - request recommendations
 - choose which completed recommendations appear publicly
 - cannot control the content of submitted recommendations
-- can opt into recruiter job postings
+- can opt into recruiter job postings through invite links
 
 ### Recommenders
 
 - do not need accounts
-- verify through work email plus access code
-- submit structured recommendations
+- receive a tokenized RecAI link
+- can save draft, submit, and delete a submitted recommendation
 
 ### Recruiters
 
 - have accounts
 - create job postings
 - search only within a job posting's opted-in candidate pool
-- use structured filters plus natural-language search
-- evaluate candidates through RecAI profiles and recommendation-backed signals
+- review candidates through public-profile data plus recruiter-only summary overlays
 
 ## Current Architecture
 
-This repo currently uses one Next.js app plus separate lane packages.
+This repo uses one Next.js app plus separate lane packages.
 
 ### App Structure
 
@@ -55,19 +54,22 @@ This repo currently uses one Next.js app plus separate lane packages.
   - shared UI components
   - shared domain types
   - routes
-  - mock data
   - landing page
+  - sample landing-page showcase data
 
 - `packages/candidate`
-  - candidate sign-in
+  - candidate auth
   - candidate dashboard
+  - candidate groups page
+  - candidate recommendation request management
   - public candidate profile
-  - recommender request flow shell
+  - recommender form flow
 
 - `packages/recruiter`
-  - recruiter sign-in
+  - recruiter auth
   - recruiter dashboard
-  - recruiter job posting shell
+  - recruiter job posting page
+  - recruiter candidate search
   - recruiter candidate review view
 
 ## Ownership Rules
@@ -96,36 +98,28 @@ This repo currently uses one Next.js app plus separate lane packages.
 
 Do not treat `apps/web/src/app/**` as the main implementation area.
 
-Those files are wrapper routes and should stay thin unless there is a routing-level reason to change them.
+Those files should stay thin unless there is a routing-level reason to change them.
 
 ## Public Profile Rule
 
-The public candidate profile is currently candidate-owned.
+The public candidate profile is candidate-owned.
 
-Recruiter flows can link to it and rely on it, but recruiter code should not silently take ownership of that surface.
+Recruiter flows can link to it and read from it, but they should not silently take ownership of that surface.
 
-If recruiter-only profile overlays are added later, they should be documented explicitly instead of quietly modifying the ownership contract.
+Recruiter-only overlays should remain in recruiter-owned routes such as `/recruiter/jobs/[jobId]/candidates/[candidateSlug]`.
 
 ## Current Technical Direction
 
 - Frontend: Next.js App Router
 - Deployment: Vercel
-- Backend direction: AWS-managed services
-- Recruiter auth path: Aurora PostgreSQL via AWS for Vercel
-- Search direction: OpenSearch
-- Recommender verification email direction: AWS SES
+- Backend: AWS-managed services
+- Database: Aurora PostgreSQL via AWS for Vercel
+- Auth: app-managed recruiter and candidate sessions stored in Aurora
+- Search: Pinecone serverless vector search
+- Embeddings: Pinecone native `multilingual-e5-large`
+- Recommender email direction: AWS SES
 
-Recruiter auth is now wired and live through an app-managed Aurora-backed flow on Vercel production.
-
-The live recruiter auth loop has been verified for:
-
-- account creation
-- account sign-in
-- protected dashboard access
-- sign-out
-- redirect back to sign-in after sign-out
-
-The app also has a live production deployment on Vercel at `https://recai-sigma.vercel.app`.
+The app has a live production deployment at `https://recai-sigma.vercel.app`.
 
 ## Verified Commands
 
@@ -140,13 +134,25 @@ npm.cmd run build
 
 These commands currently pass.
 
-## Collaboration Rules
+## What Exists Right Now
 
-- Read shared Markdown docs before making changes.
-- Stay inside your owned lane when possible.
-- Avoid editing another lane's code unless the change is intentionally shared.
-- Keep changes hackathon-practical.
-- Prefer working software over architectural perfection.
+The repo already has:
+
+- landing page
+- candidate sign-in with real account creation/login routes
+- candidate dashboard protected by candidate session
+- candidate banner editor wired to Aurora
+- candidate recruiter-group join flow through recruiter invite links
+- candidate recommendation-request creation flow
+- recommender form with save draft, submit, and delete-after-submit
+- public candidate profile backed by Aurora candidate data plus submitted recommendations
+- recruiter sign-in with real account creation/login routes
+- recruiter dashboard protected by recruiter session
+- recruiter job posting CRUD backed by Aurora
+- recruiter job posting search backed by Pinecone
+- recruiter candidate review view backed by real candidate data
+- lane package split
+- product, architecture, and spec documentation
 
 ## Documentation Rules
 
@@ -162,35 +168,6 @@ If behavior or structure changes, also update the relevant product or architectu
 - `docs/product/recruiter-portal.md`
 - `docs/product/candidate-workspace.md`
 
-## What Exists Right Now
-
-The repo already has:
-
-- landing page
-- candidate sign-in with real account creation/login routes
-- candidate workspace dashboard (LinkedIn-style) protected by candidate session
-- candidate banner editor wired to Aurora
-- recruiter sign-in with real account creation/login routes
-- recruiter dashboard protected by recruiter session
-- recruiter job posting route protected by recruiter session
-- recruiter-owned candidate review route
-- public candidate profile (still mock-backed pending candidate slice B)
-- recommender request experience
-- lane package split
-- product, architecture, and spec documentation
-
-## Immediate Priority
-
-The next most valuable implementation lanes are split between recruiter and candidate.
-
-Recommended order:
-
-1. Recruiter job posting creation flow
-2. Structured recruiter filters
-3. Search pentagon UI
-4. Natural-language search shell
-5. Candidate auth and candidate data persistence
-
 ## Current Product Decisions To Respect
 
 - Search is scoped to one recruiter-owned job posting
@@ -204,25 +181,19 @@ Recommended order:
   - Leadership
   - Communication
 
-## Open Questions
+## Current Gaps
 
-These are not fully locked yet:
-
-- whether recruiters will see extra recruiter-only insights on top of the public profile
-- final pentagon scoring rubric
-- whether candidate auth will share the same Aurora-backed app-auth pattern or use a separate AWS auth service later
+- Landing page still uses sample showcase data rather than live records
+- Candidate profile editing is light beyond banner fields and recommendation-derived profile sections
+- Pinecone indexing is lazy on first search rather than eagerly refreshed after every write
+- SES delivery for recommender requests is not wired yet
 
 ## If You Are A New Agent
 
 Start by:
 
 1. Reading this file
-2. Reading the latest relevant spec in `docs/specs/`
-3. Staying inside your owned package
-4. Adding a new Markdown spec for your change
-
-If you need deeper detail after this file, use:
-
-- `docs/architecture/current-state.md` for current implementation status
-- `docs/architecture/ownership-model.md` for edit boundaries
-- the latest numbered spec files for recent decisions
+2. Reading `docs/architecture/current-state.md`
+3. Reading the latest relevant spec in `docs/specs/`
+4. Staying inside your owned package
+5. Adding a new Markdown spec for your change

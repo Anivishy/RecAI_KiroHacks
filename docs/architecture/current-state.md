@@ -3,31 +3,46 @@
 ## What Is Implemented
 
 - The project has a working Next.js scaffold with a landing page and route shells.
-- The app now has a live Vercel production deployment available at `https://recai-sigma.vercel.app`.
-- The recruiter flow now includes a recruiter-owned candidate review route scoped to a job posting.
-- The recruiter flow now also includes a real app-managed auth path backed by Aurora PostgreSQL conventions:
-  - recruiter sign-up form
-  - recruiter sign-in form
-  - recruiter sign-out route
-  - protected recruiter dashboard, job posting, and candidate review pages
-  - Aurora-backed recruiter account and session table bootstrap logic
-- The recruiter dashboard supports full job posting CRUD backed by Aurora PostgreSQL:
-  - create job postings (title, location, employment type, experience level)
+- The app has a live Vercel production deployment at `https://recai-sigma.vercel.app`.
+- Recruiter auth is live through an Aurora PostgreSQL-backed app-managed flow:
+  - recruiter sign-up
+  - recruiter sign-in
+  - recruiter sign-out
+  - protected recruiter dashboard, job posting, and recruiter candidate review pages
+- Candidate auth is live through the same Aurora-backed pattern:
+  - candidate sign-up
+  - candidate sign-in
+  - candidate sign-out
+  - protected candidate dashboard
+  - persistent candidate banner editing
+- Recruiter job posting CRUD is backed by Aurora PostgreSQL:
+  - create job postings
   - delete job postings
-  - each posting generates a unique invite code that produces a shareable candidate join URL
-- The recruiter job posting page includes AI-powered natural language candidate search:
-  - candidates are chunked and embedded using OpenAI `text-embedding-3-small` (1536 dims)
-  - chunks (overview, per-project, per-recommendation) are stored in Pinecone serverless vector DB
-  - query embedding + Pinecone similarity search retrieves the most relevant candidate context
-  - Claude (`claude-sonnet-4-6`) ranks and explains results with a streaming response
-  - client-side `CandidateSearch` component uses `useCompletion` for real-time streaming display
-  - first search auto-indexes the posting's candidate pool (lazy indexing)
-- Recruiter, candidate, and shared code now live in separate packages:
+  - recruiter-owned posting routes
+  - unique invite codes per posting
+- Candidate join flow is live:
+  - recruiter posting pages generate invite URLs
+  - `/candidate/sign-in?join={inviteCode}` adds the signed-in candidate to that posting's pool
+  - joined posting counts are reflected from real DB memberships
+- Recommendation request flow is live:
+  - candidate creates recommender request links
+  - recommender opens `/recommend/[token]`
+  - recommender can save draft, submit, and delete after submission
+  - tokens expire after 7 days
+- Candidate profile storage is Aurora-backed:
+  - public candidate profiles now resolve from `candidate_accounts` plus submitted recommendation data
+  - projects, recommendation snippets, and pentagon scores are derived from submitted recommendations
+- Recruiter candidate search is live through Pinecone:
+  - job-scoped namespaces in `candidates-vector-db`
+  - Pinecone native inference with `multilingual-e5-large`
+  - lazy indexing on first search for a posting
+  - search results now come from real joined candidates rather than shared mocks
+- Recruiter candidate review pages now open against real candidate profiles and real posting membership.
+- Recruiter, candidate, and shared code live in separate packages:
   - `packages/recruiter`
   - `packages/candidate`
   - `packages/shared`
-- `apps/web/src/app/**` now acts as thin route wrappers only.
-- Shared product, architecture, ownership, and spec docs are in place.
+- `apps/web/src/app/**` is back to thin route wrappers for platform pages.
 
 ## Verified Commands
 
@@ -45,16 +60,18 @@ npm.cmd run build
   - recruiter sign-in
   - recruiter dashboard
   - recruiter auth backend and protected sessions
-  - recruiter job posting CRUD (Aurora-backed)
-  - recruiter job posting candidate search (Pinecone + Claude)
-  - recruiter-owned candidate review view
+  - recruiter job posting CRUD
+  - recruiter posting invite flow
+  - recruiter job posting candidate search (Pinecone)
+  - recruiter candidate review view
 - Candidate lane:
-  - candidate sign-in (real signup/signin forms)
-  - candidate workspace dashboard (LinkedIn-style, session-gated)
-  - candidate banner editor wired to Aurora
-  - candidate auth backend and protected sessions
-  - public candidate profile (still mock-backed pending slice B)
-  - recommender request flow shell
+  - candidate sign-in
+  - candidate dashboard
+  - candidate banner editor
+  - candidate recommendation request management
+  - public candidate profile
+  - recommender request form flow
+  - recruiter group membership views
 - Shared lane:
   - landing page
   - shared UI primitives
@@ -65,45 +82,46 @@ npm.cmd run build
 
 - Frontend deployment target: Vercel
 - Backend direction: AWS-managed services
-- Recruiter auth path: Aurora PostgreSQL through the AWS for Vercel integration
-- Search and recruiter KB retrieval: Pinecone serverless vector DB (added via Vercel marketplace)
-- AI layer: Vercel AI SDK (`ai` v6, `@ai-sdk/anthropic`, `@ai-sdk/react`)
+- Primary relational store: Aurora PostgreSQL through AWS for Vercel
+- Recruiter and candidate auth path: app-managed Aurora-backed sessions
+- Search and recruiter KB retrieval: Pinecone serverless vector DB
+- Embedding model: Pinecone native `multilingual-e5-large`
 - Recommender verification email direction: AWS SES
 
 ## Current Backend Status
 
 - The repo is linked to the Vercel project `recai`.
-- The Vercel project is now configured as a `Next.js` monorepo deployment with:
+- The Vercel project is configured as a Next.js monorepo deployment with:
   1. `apps/web` as the root directory
   2. source files outside the root directory enabled
   3. framework auto-output detection instead of a static `public` output directory
 - Aurora PostgreSQL is attached to the Vercel project through the AWS for Vercel integration.
-- Pinecone serverless is attached via Vercel marketplace (`PINECONE_API_KEY` env var).
+- Pinecone serverless is attached via Vercel marketplace.
+  - Required env var: `PINECONE_API_KEY`
+  - Optional cold-start optimization: `PINECONE_INDEX_HOST`
   - Index name: `candidates-vector-db`
-  - To skip the control-plane lookup on cold start, set `PINECONE_INDEX_HOST` to the full index host URL.
-- Required env vars for AI search: `ANTHROPIC_API_KEY`, `PINECONE_API_KEY`.
-- `OPENAI_API_KEY` is NOT required — embeddings are handled by Pinecone's native inference (`multilingual-e5-large`).
-- Recruiter auth is now live on production and has been verified for:
-  1. recruiter sign-up
-  2. recruiter sign-in
-  3. protected dashboard access
-  4. recruiter sign-out
-  5. redirect back to sign-in after sign-out
+- Search does not require OpenAI.
+- Candidate and recruiter profile/search surfaces now read live data from Aurora-backed records instead of shared runtime mocks.
+
+## Current Gaps
+
+- Landing-page showcase content still uses shared sample candidate/job data for marketing presentation.
+- Candidate profile editing is still minimal outside banner fields and recommendation-derived evidence.
+- Pinecone indexing is lazy on first search and is not yet eagerly refreshed on every candidate write.
+- SES-based recommender email delivery is not wired yet; recommendation links are shared manually.
 
 ## Immediate Next Build Priority
 
 The next most valuable implementation slice is:
 
-1. Candidate profile storage in Aurora (replacing mock data so real candidates appear in search)
-2. Auto-indexing candidates to Pinecone when they join a posting
-3. Candidate join flow (invite code → sign in → added to posting pool)
-4. Recruiter candidate count reflecting real DB joins
+1. Eager Pinecone refresh when candidate evidence changes
+2. Candidate-owned profile editing beyond banner fields
+3. Recruiter structured filters and search pentagon controls
+4. SES-backed recommender email delivery
 
 ## Notes For Future Context
 
-- The public candidate profile is currently candidate-owned.
-- If recruiter-only overlays are added later, they should be explicitly documented instead of silently changing ownership of the public profile.
-- The package split was chosen for hackathon speed and parallel work safety, not long-term platform complexity.
-- Candidate data is currently served from `packages/shared/src/lib/domain/mock-data.ts`. The search infrastructure is wired to this mock data until `getCandidatesForPosting()` in `recruiter-search.ts` is replaced with a real Aurora query.
-- The Pinecone index uses jobId as the namespace, so each posting has an isolated search space.
-- First search on a posting triggers lazy indexing (embed + upsert all candidates). Subsequent searches are fast.
+- The public candidate profile is candidate-owned.
+- Recruiter candidate review is a recruiter-only overlay that reads from the same candidate data, not a separate profile system.
+- Search is scoped to one recruiter-owned job posting namespace at a time.
+- Landing-page sample content is intentionally separate from live recruiter/candidate data.

@@ -1,5 +1,6 @@
 import { randomBytes, randomUUID } from "node:crypto";
 import { ensureRecruiterAuthSchema } from "./recruiter-auth";
+import { ensureCandidateAuthSchema } from "@recai/candidate/server/candidate-auth";
 import { query, withConnection } from "./recruiter-database";
 
 export type RecruiterJobPosting = {
@@ -14,6 +15,28 @@ export type RecruiterJobPosting = {
   createdAt: string;
 };
 
+export type CandidateJoinedPosting = {
+  jobId: string;
+  title: string;
+  location: string;
+  employmentType: string;
+  experienceLevel: string;
+  inviteCode: string;
+  joinedAt: string;
+};
+
+export type JobPostingCandidateMembership = {
+  candidateId: string;
+  candidateName: string;
+  candidateSlug: string;
+  joinedAt: string;
+};
+
+export type JoinPostingResult = {
+  posting: CandidateJoinedPosting | null;
+  status: "already-joined" | "invalid-invite" | "joined";
+};
+
 type JobPostingRow = {
   id: string;
   recruiter_id: string;
@@ -24,6 +47,23 @@ type JobPostingRow = {
   invite_code: string;
   candidate_count: string;
   created_at: Date;
+};
+
+type CandidateJoinedPostingRow = {
+  id: string;
+  title: string;
+  location: string;
+  employment_type: string;
+  experience_level: string;
+  invite_code: string;
+  joined_at: Date;
+};
+
+type JobPostingCandidateMembershipRow = {
+  candidate_id: string;
+  candidate_name: string;
+  candidate_slug: string;
+  joined_at: Date;
 };
 
 let jobsSchemaBootstrapPromise: Promise<void> | null = null;
@@ -42,6 +82,31 @@ function mapJobPosting(row: JobPostingRow): RecruiterJobPosting {
   };
 }
 
+function mapCandidateJoinedPosting(
+  row: CandidateJoinedPostingRow,
+): CandidateJoinedPosting {
+  return {
+    jobId: row.id,
+    title: row.title,
+    location: row.location,
+    employmentType: row.employment_type,
+    experienceLevel: row.experience_level,
+    inviteCode: row.invite_code,
+    joinedAt: row.joined_at.toISOString(),
+  };
+}
+
+function mapJobPostingCandidateMembership(
+  row: JobPostingCandidateMembershipRow,
+): JobPostingCandidateMembership {
+  return {
+    candidateId: row.candidate_id,
+    candidateName: row.candidate_name,
+    candidateSlug: row.candidate_slug,
+    joinedAt: row.joined_at.toISOString(),
+  };
+}
+
 export async function ensureRecruiterJobsSchema() {
   if (jobsSchemaBootstrapPromise) {
     return jobsSchemaBootstrapPromise;
@@ -49,6 +114,7 @@ export async function ensureRecruiterJobsSchema() {
 
   jobsSchemaBootstrapPromise = (async () => {
     await ensureRecruiterAuthSchema();
+    await ensureCandidateAuthSchema();
 
     await withConnection(async (client) => {
       await client.query("BEGIN");
@@ -78,6 +144,26 @@ export async function ensureRecruiterJobsSchema() {
           ON job_postings (invite_code)
         `);
 
+        await client.query(`
+          CREATE TABLE IF NOT EXISTS posting_candidates (
+            id TEXT PRIMARY KEY,
+            job_id TEXT NOT NULL REFERENCES job_postings(id) ON DELETE CASCADE,
+            candidate_id TEXT NOT NULL REFERENCES candidate_accounts(id) ON DELETE CASCADE,
+            joined_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+            UNIQUE(job_id, candidate_id)
+          )
+        `);
+
+        await client.query(`
+          CREATE INDEX IF NOT EXISTS posting_candidates_job_id_idx
+          ON posting_candidates (job_id)
+        `);
+
+        await client.query(`
+          CREATE INDEX IF NOT EXISTS posting_candidates_candidate_id_idx
+          ON posting_candidates (candidate_id)
+        `);
+
         await client.query("COMMIT");
       } catch (error) {
         await client.query("ROLLBACK");
@@ -100,10 +186,22 @@ export async function getJobPostingsForRecruiter(
   const result = await query<JobPostingRow>(
     `
       SELECT
-        id, recruiter_id, title, location, employment_type,
-        experience_level, invite_code, created_at,
-        0 AS candidate_count
+        job_postings.id,
+        job_postings.recruiter_id,
+        job_postings.title,
+        job_postings.location,
+        job_postings.employment_type,
+        job_postings.experience_level,
+        job_postings.invite_code,
+        job_postings.created_at,
+        COALESCE(candidate_counts.candidate_count, 0)::text AS candidate_count
       FROM job_postings
+      LEFT JOIN (
+        SELECT job_id, COUNT(*)::int AS candidate_count
+        FROM posting_candidates
+        GROUP BY job_id
+      ) AS candidate_counts
+        ON candidate_counts.job_id = job_postings.id
       WHERE recruiter_id = $1
       ORDER BY created_at DESC
     `,
@@ -122,11 +220,23 @@ export async function getJobPostingById(
   const result = await query<JobPostingRow>(
     `
       SELECT
-        id, recruiter_id, title, location, employment_type,
-        experience_level, invite_code, created_at,
-        0 AS candidate_count
+        job_postings.id,
+        job_postings.recruiter_id,
+        job_postings.title,
+        job_postings.location,
+        job_postings.employment_type,
+        job_postings.experience_level,
+        job_postings.invite_code,
+        job_postings.created_at,
+        COALESCE(candidate_counts.candidate_count, 0)::text AS candidate_count
       FROM job_postings
-      WHERE id = $1 AND recruiter_id = $2
+      LEFT JOIN (
+        SELECT job_id, COUNT(*)::int AS candidate_count
+        FROM posting_candidates
+        GROUP BY job_id
+      ) AS candidate_counts
+        ON candidate_counts.job_id = job_postings.id
+      WHERE job_postings.id = $1 AND job_postings.recruiter_id = $2
       LIMIT 1
     `,
     [jobId, recruiterId],
@@ -225,4 +335,106 @@ export async function updateJobPosting(
   );
 
   return result.rows[0] ? mapJobPosting(result.rows[0]) : null;
+}
+
+export async function joinCandidateToPostingByInviteCode(
+  candidateId: string,
+  inviteCode: string,
+): Promise<JoinPostingResult> {
+  await ensureRecruiterJobsSchema();
+
+  const postingResult = await query<CandidateJoinedPostingRow>(
+    `
+      SELECT
+        id,
+        title,
+        location,
+        employment_type,
+        experience_level,
+        invite_code,
+        NOW() AS joined_at
+      FROM job_postings
+      WHERE invite_code = $1
+      LIMIT 1
+    `,
+    [inviteCode],
+  );
+
+  const posting = postingResult.rows[0];
+
+  if (!posting) {
+    return {
+      posting: null,
+      status: "invalid-invite",
+    };
+  }
+
+  const insertResult = await query<{ joined_at: Date }>(
+    `
+      INSERT INTO posting_candidates (id, job_id, candidate_id)
+      VALUES ($1, $2, $3)
+      ON CONFLICT (job_id, candidate_id) DO NOTHING
+      RETURNING joined_at
+    `,
+    [randomUUID(), posting.id, candidateId],
+  );
+
+  return {
+    posting: mapCandidateJoinedPosting({
+      ...posting,
+      joined_at: insertResult.rows[0]?.joined_at ?? posting.joined_at,
+    }),
+    status: insertResult.rowCount ? "joined" : "already-joined",
+  };
+}
+
+export async function getJoinedPostingsForCandidate(
+  candidateId: string,
+): Promise<CandidateJoinedPosting[]> {
+  await ensureRecruiterJobsSchema();
+
+  const result = await query<CandidateJoinedPostingRow>(
+    `
+      SELECT
+        job_postings.id,
+        job_postings.title,
+        job_postings.location,
+        job_postings.employment_type,
+        job_postings.experience_level,
+        job_postings.invite_code,
+        posting_candidates.joined_at
+      FROM posting_candidates
+      INNER JOIN job_postings
+        ON job_postings.id = posting_candidates.job_id
+      WHERE posting_candidates.candidate_id = $1
+      ORDER BY posting_candidates.joined_at DESC
+    `,
+    [candidateId],
+  );
+
+  return result.rows.map(mapCandidateJoinedPosting);
+}
+
+export async function getJoinedCandidatesForPosting(
+  jobId: string,
+): Promise<JobPostingCandidateMembership[]> {
+  await ensureRecruiterJobsSchema();
+
+  const result = await query<JobPostingCandidateMembershipRow>(
+    `
+      SELECT
+        candidate_accounts.id AS candidate_id,
+        candidate_accounts.full_name AS candidate_name,
+        candidate_accounts.slug AS candidate_slug,
+        posting_candidates.joined_at
+      FROM posting_candidates
+      INNER JOIN candidate_accounts
+        ON candidate_accounts.id = posting_candidates.candidate_id
+      WHERE posting_candidates.job_id = $1
+      ORDER BY posting_candidates.joined_at DESC
+    `,
+    [jobId],
+  );
+
+  return result.rows.map(mapJobPostingCandidateMembership);
 }

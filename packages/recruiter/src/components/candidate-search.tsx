@@ -1,6 +1,8 @@
 "use client";
 
+import Link from "next/link";
 import { useState, useRef } from "react";
+import { appRoutes } from "@recai/shared";
 
 type SearchResult = {
   candidateSlug: string;
@@ -102,7 +104,17 @@ export function CandidateSearch({ jobId }: CandidateSearchProps) {
           {results.map((r) => (
             <div className="py-4 first:pt-0" key={r.candidateSlug}>
               <div className="mb-2 flex items-center justify-between">
-                <span className="font-medium text-sm text-foreground">{r.candidateName}</span>
+                <div className="flex items-center gap-3">
+                  <span className="font-medium text-sm text-foreground">
+                    {r.candidateName}
+                  </span>
+                  <Link
+                    className="rounded-full border border-(--line) bg-white px-2.5 py-1 text-[11px] font-semibold text-foreground transition hover:border-(--accent) hover:text-(--accent)"
+                    href={appRoutes.recruiterCandidateProfile(jobId, r.candidateSlug)}
+                  >
+                    Open review
+                  </Link>
+                </div>
                 <span className="text-xs text-(--muted) tabular-nums">
                   {(r.score * 100).toFixed(0)}% match
                 </span>

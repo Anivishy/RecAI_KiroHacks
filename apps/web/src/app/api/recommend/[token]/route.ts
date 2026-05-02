@@ -8,6 +8,7 @@ export async function GET(
   const rec = await getRecommendationByToken(token);
   if (!rec) return new Response("Not found", { status: 404 });
   // Don't expose email in GET response
-  const { recommenderEmail: _email, ...safe } = rec;
+  const { recommenderEmail, ...safe } = rec;
+  void recommenderEmail;
   return Response.json(safe);
 }
