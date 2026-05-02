@@ -28,7 +28,7 @@ async function ensureIndex() {
     waitUntilReady: true,
   });
 
-  const host = process.env.PINECONE_INDEX_HOST;
+  const host = process.env.PINECONE_HOSTNAME;
   return host ? pc.index(INDEX_NAME, host) : pc.index(INDEX_NAME);
 }
 

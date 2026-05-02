@@ -3,7 +3,7 @@
 ## What Is Implemented
 
 - The project has a working Next.js scaffold with a landing page and route shells.
-- The app has a live Vercel production deployment at `https://recai-sigma.vercel.app`.
+- The Kiro Hacks line deploys through the Vercel project `rec-ai-kiro-hacks-web`.
 - Recruiter auth is live through an Aurora PostgreSQL-backed app-managed flow:
   - recruiter sign-up
   - recruiter sign-in
@@ -90,18 +90,25 @@ npm.cmd run build
 
 ## Current Backend Status
 
-- The repo is linked to the Vercel project `recai`.
+- The `kiro-test` line is linked to the Vercel project `rec-ai-kiro-hacks-web`.
 - The Vercel project is configured as a Next.js monorepo deployment with:
   1. `apps/web` as the root directory
   2. source files outside the root directory enabled
   3. framework auto-output detection instead of a static `public` output directory
-- Aurora PostgreSQL is attached to the Vercel project through the AWS for Vercel integration.
+- Aurora PostgreSQL is attached to the new Vercel project through the AWS for Vercel integration.
 - Pinecone serverless is attached via Vercel marketplace.
   - Required env var: `PINECONE_API_KEY`
-  - Optional cold-start optimization: `PINECONE_INDEX_HOST`
-  - Index name: `candidates-vector-db`
+  - Required host env var on this line: `PINECONE_HOSTNAME`
+  - Index name on this line: `candidate-profile-index`
 - Search does not require OpenAI.
 - Candidate and recruiter profile/search surfaces now read live data from Aurora-backed records instead of shared runtime mocks.
+- Aurora envs on this line use the `PROD_*` naming contract from the new Vercel project:
+  - `PROD_AWS_REGION`
+  - `PROD_AWS_ROLE_ARN`
+  - `PROD_PGHOST`
+  - `PROD_PGPORT`
+  - `PROD_PGUSER`
+  - `PROD_PGDATABASE`
 
 ## Current Gaps
 

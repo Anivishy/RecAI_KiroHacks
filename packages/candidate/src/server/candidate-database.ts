@@ -5,12 +5,12 @@ import type { ClientBase, QueryResult, QueryResultRow } from "pg";
 import { Pool } from "pg";
 
 const REQUIRED_AURORA_ENV_KEYS = [
-  "AWS_REGION",
-  "AWS_ROLE_ARN",
-  "PGHOST",
-  "PGPORT",
-  "PGUSER",
-  "PGDATABASE",
+  "PROD_AWS_REGION",
+  "PROD_AWS_ROLE_ARN",
+  "PROD_PGHOST",
+  "PROD_PGPORT",
+  "PROD_PGUSER",
+  "PROD_PGDATABASE",
 ] as const;
 
 type AuroraConfig = {
@@ -34,8 +34,9 @@ function isProvisioningHost(host: string | undefined) {
 
 function getAuroraConfig(): AuroraConfig {
   const missingKeys = getMissingAuroraEnvKeys();
+  const resolvedHost = process.env.PROD_PGHOST;
 
-  if (missingKeys.length > 0 || isProvisioningHost(process.env.PGHOST)) {
+  if (missingKeys.length > 0 || isProvisioningHost(resolvedHost)) {
     const missingDetails =
       missingKeys.length > 0
         ? `Missing environment variables: ${missingKeys.join(", ")}.`
@@ -47,19 +48,19 @@ function getAuroraConfig(): AuroraConfig {
   }
 
   return {
-    database: process.env.PGDATABASE ?? "postgres",
-    host: process.env.PGHOST as string,
-    port: Number(process.env.PGPORT),
-    region: process.env.AWS_REGION as string,
-    roleArn: process.env.AWS_ROLE_ARN as string,
-    user: process.env.PGUSER as string,
+    database: process.env.PROD_PGDATABASE ?? "postgres",
+    host: resolvedHost as string,
+    port: Number(process.env.PROD_PGPORT),
+    region: process.env.PROD_AWS_REGION as string,
+    roleArn: process.env.PROD_AWS_ROLE_ARN as string,
+    user: process.env.PROD_PGUSER as string,
   };
 }
 
 export function isCandidateDatabaseConfigured() {
   return (
     getMissingAuroraEnvKeys().length === 0 &&
-    !isProvisioningHost(process.env.PGHOST)
+    !isProvisioningHost(process.env.PROD_PGHOST)
   );
 }
 

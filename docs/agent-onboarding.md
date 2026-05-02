@@ -119,7 +119,7 @@ Recruiter-only overlays should remain in recruiter-owned routes such as `/recrui
 - Embeddings: Pinecone native `multilingual-e5-large`
 - Recommender email direction: AWS SES
 
-The app has a live production deployment at `https://recai-sigma.vercel.app`.
+The Kiro Hacks line deploys through the Vercel project `rec-ai-kiro-hacks-web`.
 
 ## Verified Commands
 
@@ -187,6 +187,22 @@ If behavior or structure changes, also update the relevant product or architectu
 - Candidate profile editing is light beyond banner fields and recommendation-derived profile sections
 - Pinecone indexing is lazy on first search rather than eagerly refreshed after every write
 - SES delivery for recommender requests is not wired yet
+
+## Environment Contract
+
+On this line, Aurora is expected through the new Vercel project env names:
+
+- `PROD_AWS_REGION`
+- `PROD_AWS_ROLE_ARN`
+- `PROD_PGHOST`
+- `PROD_PGPORT`
+- `PROD_PGUSER`
+- `PROD_PGDATABASE`
+
+Recruiter search expects:
+
+- `PINECONE_API_KEY`
+- `PINECONE_HOSTNAME`
 
 ## If You Are A New Agent
 
