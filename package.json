@@ -1,0 +1,21 @@
+{
+  "name": "recai",
+  "version": "0.1.0",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "devDependencies": {
+    "@types/node": "^20",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "typescript": "^5"
+  },
+  "scripts": {
+    "dev": "npm --workspace @recai/web run dev",
+    "build": "npm --workspace @recai/web run build",
+    "lint": "npm --workspace @recai/web run lint",
+    "typecheck": "npm --workspace @recai/web run typecheck"
+  }
+}
