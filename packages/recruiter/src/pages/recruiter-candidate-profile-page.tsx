@@ -10,6 +10,8 @@ import {
   pentagonTraitMeta,
   sampleJobPosting,
 } from "@recai/shared";
+import { RecruiterSignOutForm } from "../components/recruiter-sign-out-form";
+import { requireRecruiterSession } from "../server/recruiter-auth";
 
 type RecruiterCandidateProfilePageProps = {
   params: Promise<{
@@ -21,6 +23,7 @@ type RecruiterCandidateProfilePageProps = {
 export async function RecruiterCandidateProfilePage({
   params,
 }: RecruiterCandidateProfilePageProps) {
+  const recruiter = await requireRecruiterSession();
   const { jobId, candidateSlug } = await params;
   const candidate = getCandidateProfileBySlug(candidateSlug);
   const recruiterReview = getRecruiterCandidateReview(jobId, candidateSlug);
@@ -42,7 +45,7 @@ export async function RecruiterCandidateProfilePage({
     <AppShell
       eyebrow="Recruiter Candidate Review"
       title={candidate.fullName}
-      description={`Job-contextual review for ${sampleJobPosting.title}. This recruiter-owned view keeps the public profile intact while surfacing faster hiring evaluation signals.`}
+      description={`Job-contextual review for ${sampleJobPosting.title}, opened by ${recruiter.fullName}. This view keeps the public profile intact while surfacing faster hiring evaluation signals.`}
       breadcrumbs={[
         { label: "Home", href: appRoutes.home },
         { label: "Recruiter dashboard", href: appRoutes.recruiterDashboard },
@@ -63,6 +66,7 @@ export async function RecruiterCandidateProfilePage({
           >
             Open public profile
           </Link>
+          <RecruiterSignOutForm />
         </>
       }
     >

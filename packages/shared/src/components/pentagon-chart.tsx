@@ -105,8 +105,8 @@ export function PentagonChart({ scores }: { scores: PentagonScoreMap }) {
             Five recruiter-relevant traits
           </h2>
           <p className="mt-3 text-sm leading-6 text-[var(--muted)]">
-            The pentagon is currently represented with fixed traits for the scaffold. The
-            final scoring rubric will be defined before recruiter search implementation.
+            Each score summarizes recommendation-backed evidence across the traits that
+            matter most in recruiter review.
           </p>
           <div className="mt-5 grid gap-3 sm:grid-cols-2">
             {pentagonTraitMeta.map((trait) => (

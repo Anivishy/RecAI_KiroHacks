@@ -77,13 +77,13 @@ export function LandingPage() {
                     className="rounded-full bg-[var(--foreground)] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[var(--accent-strong)]"
                     href={appRoutes.recruiterSignIn}
                   >
-                    Enter recruiter flow
+                    Open recruiter portal
                   </Link>
                   <Link
                     className="rounded-full border border-[color:var(--line)] bg-white/70 px-5 py-3 text-sm font-semibold text-[var(--foreground)] transition hover:border-[var(--accent)] hover:text-[var(--accent)]"
                     href={appRoutes.candidateSignIn}
                   >
-                    Enter candidate flow
+                    Open candidate workspace
                   </Link>
                 </div>
               </div>
@@ -114,14 +114,14 @@ export function LandingPage() {
                 </div>
                 <div className="rounded-[28px] border border-[color:var(--line)] bg-white/80 p-5">
                   <p className="text-sm uppercase tracking-[0.22em] text-[var(--muted)]">
-                    Parallel build
+                    Verified voices
                   </p>
                   <p className="mt-3 text-3xl font-semibold text-[var(--foreground)]">
-                    2 lanes
+                    External proof
                   </p>
                   <p className="mt-2 text-sm leading-6 text-[var(--muted)]">
-                    Candidate and recruiter routes are already separated for parallel
-                    implementation.
+                    Recommendation content comes from managers and coworkers, not from
+                    the candidate.
                   </p>
                 </div>
               </div>
@@ -134,7 +134,7 @@ export function LandingPage() {
               title="Show real work through verified voices"
               description="Candidates build a profile, request recommendations, and curate which external validations appear publicly."
               href={appRoutes.candidateSignIn}
-              cta="Open candidate entry"
+              cta="Open candidate workspace"
               bullets={[
                 "Manage recommendation requests",
                 "Join relevant job postings",
@@ -147,7 +147,7 @@ export function LandingPage() {
               title="Search by proof, not just polish"
               description="Recruiters create a job posting and search only within its opted-in candidate pool using filters and natural language."
               href={appRoutes.recruiterSignIn}
-              cta="Open recruiter entry"
+              cta="Open recruiter portal"
               bullets={[
                 "Create job-scoped candidate pools",
                 "Filter with pentagon minimums",
@@ -188,48 +188,48 @@ export function LandingPage() {
             </SectionCard>
 
             <SectionCard
-              eyebrow="Build Lanes"
-              title="Set up to work in parallel immediately"
-              description="The scaffold already separates the recruiter and candidate workstreams, while preserving shared docs and domain contracts."
+              eyebrow="Product Views"
+              title="What each side sees in RecAI"
+              description="Both experiences are centered on the same trust model, but each side gets the tools that fit their role."
             >
               <div className="grid gap-4">
                 <div className="rounded-[24px] border border-[color:var(--line)] bg-white/70 p-5">
                   <p className="text-sm font-semibold uppercase tracking-[0.22em] text-[var(--accent)]">
-                    Recruiter lane
+                    Recruiters
                   </p>
                   <p className="mt-3 text-sm leading-6 text-[var(--muted)]">
-                    Focus on the portal, job postings, search system, and recruiter-facing
-                    candidate evaluation.
+                    Review opted-in candidates, search for validated strengths, and open
+                    evidence-backed profiles before reaching out externally.
                   </p>
                   <Link
                     className="mt-4 inline-flex text-sm font-semibold text-[var(--accent-strong)] hover:text-[var(--accent)]"
-                    href={appRoutes.recruiterDashboard}
+                    href={appRoutes.recruiterSignIn}
                   >
-                    View recruiter dashboard shell
+                    Enter recruiter portal
                   </Link>
                 </div>
                 <div className="rounded-[24px] border border-[color:var(--line)] bg-white/70 p-5">
                   <p className="text-sm font-semibold uppercase tracking-[0.22em] text-[var(--accent-warm)]">
-                    Candidate lane
+                    Candidates
                   </p>
                   <p className="mt-3 text-sm leading-6 text-[var(--muted)]">
-                    Focus on profiles, recommendation request management, and opt-in job
-                    interest workflows.
+                    Build a public profile, invite trusted recommenders, and choose which
+                    completed recommendations to show.
                   </p>
                   <Link
                     className="mt-4 inline-flex text-sm font-semibold text-[var(--accent-strong)] hover:text-[var(--accent)]"
-                    href={appRoutes.candidateDashboard}
+                    href={appRoutes.candidateSignIn}
                   >
-                    View candidate dashboard shell
+                    Enter candidate workspace
                   </Link>
                 </div>
                 <div className="rounded-[24px] border border-[color:var(--line)] bg-[rgba(15,118,110,0.08)] p-5">
                   <p className="text-sm font-semibold uppercase tracking-[0.22em] text-[var(--foreground)]">
-                    Shared contract
+                    Shared profile
                   </p>
                   <p className="mt-3 text-sm leading-6 text-[var(--muted)]">
-                    All changes now require specs in `docs/specs/` so both teammates and
-                    AI agents stay synchronized.
+                    The public candidate profile stays consistent, while recruiter views
+                    add hiring context and evidence summaries around it.
                   </p>
                 </div>
               </div>
@@ -238,26 +238,26 @@ export function LandingPage() {
 
           <section className="grid gap-6 lg:grid-cols-[0.95fr_1.05fr]">
             <SectionCard
-              eyebrow="Mock Preview"
-              title="Scaffold data already reflects the product story"
-              description="We are using realistic mock entities from day one so recruiter and candidate UI work can move before the backend is wired."
+              eyebrow="See It In Action"
+              title="A job posting and profile built around evidence"
+              description="Recruiters review candidates inside a posting-specific pool, and every profile is anchored in work-backed recommendations."
             >
               <div className="grid gap-4">
                 <div className="rounded-[24px] border border-[color:var(--line)] bg-white/70 p-5">
                   <p className="text-sm uppercase tracking-[0.22em] text-[var(--muted)]">
-                    Sample posting
+                    Featured posting
                   </p>
                   <h3 className="mt-2 text-xl font-semibold text-[var(--foreground)]">
                     {sampleJobPosting.title}
                   </h3>
                   <p className="mt-2 text-sm leading-6 text-[var(--muted)]">
-                    {sampleJobPosting.team} team · {sampleJobPosting.location} ·{" "}
+                    {sampleJobPosting.team} team - {sampleJobPosting.location} -{" "}
                     {sampleJobPosting.candidatePoolSize} opted-in candidates
                   </p>
                 </div>
                 <div className="rounded-[24px] border border-[color:var(--line)] bg-white/70 p-5">
                   <p className="text-sm uppercase tracking-[0.22em] text-[var(--muted)]">
-                    Public profile route
+                    Featured profile
                   </p>
                   <Link
                     className="mt-2 inline-flex text-lg font-semibold text-[var(--accent-strong)] hover:text-[var(--accent)]"
@@ -272,27 +272,27 @@ export function LandingPage() {
             </SectionCard>
 
             <SectionCard
-              eyebrow="What Comes Next"
-              title="Best next slice after this scaffold"
-              description="The right next step is recruiter implementation, starting at the dashboard and job posting shell, while candidate work can begin independently in parallel."
+              eyebrow="Why It Matters"
+              title="Better signals for both sides of hiring"
+              description="RecAI helps candidates show real work and helps recruiters search for strengths that are validated by other people."
             >
               <div className="grid gap-4 sm:grid-cols-2">
                 <div className="rounded-[24px] border border-[color:var(--line)] bg-white/70 p-5">
                   <p className="text-sm font-semibold uppercase tracking-[0.22em] text-[var(--accent)]">
-                    Recruiter
+                    For recruiters
                   </p>
                   <p className="mt-3 text-sm leading-6 text-[var(--muted)]">
-                    Implement job creation, candidate-pool search scaffolding, and the
-                    results-to-profile flow.
+                    Find candidates with evidence of technical depth, ownership,
+                    leadership, execution, and communication.
                   </p>
                 </div>
                 <div className="rounded-[24px] border border-[color:var(--line)] bg-white/70 p-5">
                   <p className="text-sm font-semibold uppercase tracking-[0.22em] text-[var(--accent-warm)]">
-                    Candidate
+                    For candidates
                   </p>
                   <p className="mt-3 text-sm leading-6 text-[var(--muted)]">
-                    Implement profile editing, recommendation requests, and job-interest
-                    management.
+                    Show what trusted collaborators say about your impact instead of
+                    relying only on self-description.
                   </p>
                 </div>
               </div>

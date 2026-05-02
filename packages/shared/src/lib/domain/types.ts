@@ -73,6 +73,7 @@ export interface CandidateProfile {
 
 export interface RecruiterAccount {
   id: string;
+  email: string;
   fullName: string;
   title: string;
   company: string;

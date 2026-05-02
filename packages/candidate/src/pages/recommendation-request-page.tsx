@@ -25,7 +25,7 @@ export async function RecommendationRequestPage({
     <AppShell
       eyebrow="Recommender Flow"
       title={`Recommendation request for ${sampleRecommendationRequest.candidateName}`}
-      description="This shell reserves space for the no-account recommender flow: verify work email, unlock the form, and submit a structured recommendation."
+      description="Recommenders verify through work email, then submit structured feedback that becomes trusted evidence on the candidate's profile."
       breadcrumbs={[
         { label: "Home", href: appRoutes.home },
         { label: "Recommendation request" },
@@ -59,8 +59,8 @@ export async function RecommendationRequestPage({
             description={card.description}
           >
             <div className="rounded-[24px] border border-[color:var(--line)] bg-white/75 p-5 text-sm leading-6 text-[var(--muted)]">
-              Flow shell only for now. This route exists so the recommender journey is
-              accounted for in the scaffold even before implementation begins.
+              This step is designed to keep recommendation submission trustworthy and tied
+              to a real professional identity.
             </div>
           </SectionCard>
         ))}

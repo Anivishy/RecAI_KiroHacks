@@ -3,7 +3,14 @@
 ## What Is Implemented
 
 - The project has a working Next.js scaffold with a landing page and route shells.
+- The app now has a live Vercel production deployment available at `https://recai-sigma.vercel.app`.
 - The recruiter flow now includes a recruiter-owned candidate review route scoped to a job posting.
+- The recruiter flow now also includes a real app-managed auth path backed by Aurora PostgreSQL conventions:
+  - recruiter sign-up form
+  - recruiter sign-in form
+  - recruiter sign-out route
+  - protected recruiter dashboard, job posting, and candidate review pages
+  - Aurora-backed recruiter account and session table bootstrap logic
 - Recruiter, candidate, and shared code now live in separate packages:
   - `packages/recruiter`
   - `packages/candidate`
@@ -26,6 +33,7 @@ npm.cmd run build
 - Recruiter lane:
   - recruiter sign-in
   - recruiter dashboard
+  - recruiter auth backend and protected sessions
   - recruiter job posting search shell
   - recruiter-owned candidate review view
 - Candidate lane:
@@ -43,17 +51,33 @@ npm.cmd run build
 
 - Frontend deployment target: Vercel
 - Backend direction: AWS-managed services
+- Recruiter auth path: Aurora PostgreSQL through the AWS for Vercel integration
 - Search and recruiter KB retrieval: OpenSearch
 - Recommender verification email direction: AWS SES
+
+## Current Backend Status
+
+- The repo is linked to the Vercel project `recai`.
+- The Vercel project is now configured as a `Next.js` monorepo deployment with:
+  1. `apps/web` as the root directory
+  2. source files outside the root directory enabled
+  3. framework auto-output detection instead of a static `public` output directory
+- Aurora PostgreSQL is attached to the Vercel project through the AWS for Vercel integration.
+- Recruiter auth is now live on production and has been verified for:
+  1. recruiter sign-up
+  2. recruiter sign-in
+  3. protected dashboard access
+  4. recruiter sign-out
+  5. redirect back to sign-in after sign-out
 
 ## Immediate Next Build Priority
 
 The next most valuable implementation slice is the recruiter lane:
 
-1. recruiter profile polishing and interaction refinement
-2. job posting creation flow
-3. structured filters and search-pentagon UI
-4. natural-language search shell backed later by OpenSearch
+1. recruiter job posting creation flow
+2. structured filters and search-pentagon UI
+3. natural-language search shell backed later by OpenSearch
+4. recruiter results and search-state persistence polish
 
 ## Notes For Future Context
 

@@ -14,7 +14,7 @@ export function CandidateDashboardPage() {
     <AppShell
       eyebrow="Candidate Dashboard"
       title={`${candidate.fullName}'s workspace`}
-      description="This is the candidate-side shell for profile management, recommendation requests, and job-interest actions."
+      description="Manage your profile, recommendation requests, and the roles you want recruiters to consider you for."
       breadcrumbs={[
         { label: "Home", href: appRoutes.home },
         { label: "Candidate sign in", href: appRoutes.candidateSignIn },
@@ -32,7 +32,7 @@ export function CandidateDashboardPage() {
             className="rounded-full bg-[var(--foreground)] px-4 py-2 text-sm font-semibold text-white transition hover:bg-[var(--accent-strong)]"
             href={appRoutes.recommenderRequest(sampleRecommendationRequest.id)}
           >
-            Preview recommender flow
+            Open recommendation request
           </Link>
         </>
       }
@@ -41,7 +41,7 @@ export function CandidateDashboardPage() {
         <SectionCard
           eyebrow="Profile Snapshot"
           title="Public profile readiness"
-          description="The candidate dashboard will eventually manage the public page, displayed recommendations, and job-interest actions."
+          description="Track the public signals that shape how recruiters understand your experience."
         >
           <div className="grid gap-4 md:grid-cols-3">
             <div className="rounded-[24px] border border-[color:var(--line)] bg-white/75 p-5">
@@ -49,7 +49,7 @@ export function CandidateDashboardPage() {
                 Target roles
               </p>
               <p className="mt-3 text-lg font-semibold text-[var(--foreground)]">
-                {candidate.targetRoles.join(" · ")}
+                {candidate.targetRoles.join(" / ")}
               </p>
             </div>
             <div className="rounded-[24px] border border-[color:var(--line)] bg-white/75 p-5">
@@ -73,8 +73,8 @@ export function CandidateDashboardPage() {
 
         <SectionCard
           eyebrow="Recommendation Queue"
-          title="Current scaffold request state"
-          description="Recommendation workflows will live here, including request tracking, reminders, and which recommendations are visible publicly."
+          title="Current request state"
+          description="Track open recommendation requests, follow up when needed, and decide which completed recommendations stay public."
         >
           <div className="rounded-[24px] border border-[color:var(--line)] bg-white/75 p-5">
             <p className="text-sm uppercase tracking-[0.22em] text-[var(--muted)]">
@@ -95,16 +95,16 @@ export function CandidateDashboardPage() {
 
       <div className="grid gap-6 lg:grid-cols-2">
         <SectionCard
-          eyebrow="What The Candidate Lane Owns"
-          title="Parallel track for your teammate"
-          description="This route boundary gives the candidate implementation a clean area to evolve without depending on recruiter portal work."
+          eyebrow="Manage Your Presence"
+          title="Everything candidates control"
+          description="Candidates control what appears on their profile without being able to rewrite what recommenders submit."
         >
           <div className="grid gap-3">
             {[
-              "Candidate onboarding and auth",
               "Profile editing and project management",
-              "Recommendation request lifecycle",
-              "Job posting opt-in flow",
+              "Recommendation request tracking",
+              "Recommendation visibility choices",
+              "Job posting opt-in decisions",
             ].map((item) => (
               <div
                 key={item}
@@ -117,14 +117,15 @@ export function CandidateDashboardPage() {
         </SectionCard>
 
         <SectionCard
-          eyebrow="Next Build Slice"
-          title="What should happen next on this lane"
-          description="Once the candidate track starts moving, the next useful step is real onboarding followed by editable profile sections and recommendation-request creation."
+          eyebrow="Why Recommendations Matter"
+          title="Show impact through trusted voices"
+          description="The strongest signal on a RecAI profile is not polished copy. It is what real coworkers and managers say about the work they saw firsthand."
         >
           <div className="space-y-4 rounded-[24px] border border-[color:var(--line)] bg-[rgba(234,88,12,0.08)] p-5">
             <p className="text-sm leading-6 text-[var(--muted)]">
-              For now, this dashboard is a truthful shell rather than fake functionality.
-              The route exists so page hierarchy, docs, and shared data contracts are ready.
+              Verified recommendations help recruiters trust the profile faster, while
+              giving candidates a more credible way to stand out from AI-polished
+              applications.
             </p>
           </div>
         </SectionCard>

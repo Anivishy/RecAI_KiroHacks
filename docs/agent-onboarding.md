@@ -111,10 +111,21 @@ If recruiter-only profile overlays are added later, they should be documented ex
 - Frontend: Next.js App Router
 - Deployment: Vercel
 - Backend direction: AWS-managed services
+- Recruiter auth path: Aurora PostgreSQL via AWS for Vercel
 - Search direction: OpenSearch
 - Recommender verification email direction: AWS SES
 
-The exact backend implementation is not wired yet. Current code is scaffold + mock data + route shells.
+Recruiter auth is now wired and live through an app-managed Aurora-backed flow on Vercel production.
+
+The live recruiter auth loop has been verified for:
+
+- account creation
+- account sign-in
+- protected dashboard access
+- sign-out
+- redirect back to sign-in after sign-out
+
+The app also has a live production deployment on Vercel at `https://recai-sigma.vercel.app`.
 
 ## Verified Commands
 
@@ -156,14 +167,14 @@ If behavior or structure changes, also update the relevant product or architectu
 The repo already has:
 
 - landing page
-- candidate sign-in shell
-- recruiter sign-in shell
-- candidate dashboard shell
-- recruiter dashboard shell
-- recruiter job posting shell
+- candidate sign-in experience
+- recruiter sign-in with real account creation/login routes
+- candidate dashboard experience
+- recruiter dashboard protected by recruiter session
+- recruiter job posting route protected by recruiter session
 - recruiter-owned candidate review route
-- public candidate profile shell
-- recommender request shell
+- public candidate profile
+- recommender request experience
 - lane package split
 - product, architecture, and spec documentation
 
@@ -173,12 +184,11 @@ The next most valuable implementation lane is recruiter.
 
 Recommended order:
 
-1. Recruiter dashboard refinement
-2. Job posting creation flow
-3. Structured recruiter filters
-4. Search pentagon UI
-5. Natural-language search shell
-6. Backend integration after UI flow shape is stable
+1. Recruiter job posting creation flow
+2. Structured recruiter filters
+3. Search pentagon UI
+4. Natural-language search shell
+5. Candidate auth and candidate data persistence
 
 ## Current Product Decisions To Respect
 
@@ -198,8 +208,8 @@ Recommended order:
 These are not fully locked yet:
 
 - whether recruiters will see extra recruiter-only insights on top of the public profile
-- exact backend data-store choice
 - final pentagon scoring rubric
+- whether candidate auth will share the same Aurora-backed app-auth pattern or use a separate AWS auth service later
 
 ## If You Are A New Agent
 

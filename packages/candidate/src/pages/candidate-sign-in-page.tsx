@@ -6,7 +6,7 @@ export function CandidateSignInPage() {
     <AppShell
       eyebrow="Candidate Entry"
       title="Build a profile that is backed by people, not just polished copy."
-      description="This route is the candidate lane starting point. We are keeping it separate from recruiter auth from day one so both workstreams can move independently."
+      description="Manage your public profile, request verified recommendations, and decide which trusted voices appear on your page."
       actions={
         <>
           <Link
@@ -26,9 +26,9 @@ export function CandidateSignInPage() {
     >
       <div className="grid gap-6 lg:grid-cols-[1.05fr_0.95fr]">
         <SectionCard
-          eyebrow="Candidate Goals"
-          title="What this flow will own"
-          description="The candidate experience is where users shape their public presence without being able to rewrite what recommenders actually say."
+          eyebrow="Candidate Experience"
+          title="How candidates stand out in RecAI"
+          description="Candidates shape their public presence while recommendation content stays in the recommender's hands."
         >
           <div className="grid gap-3">
             {[
@@ -49,20 +49,20 @@ export function CandidateSignInPage() {
         </SectionCard>
 
         <SectionCard
-          eyebrow="Scaffold Status"
-          title="Auth is intentionally not wired yet"
-          description="Right now this page exists to lock in navigation and responsibilities. The next candidate implementation pass can wire the actual auth provider and candidate onboarding flow."
+          eyebrow="Workspace Access"
+          title="Enter the candidate workspace"
+          description="Use the candidate workspace to manage profile details, recommendation requests, and the roles you want to pursue."
         >
           <div className="space-y-4 rounded-[24px] border border-[color:var(--line)] bg-[rgba(21,94,239,0.06)] p-5">
             <p className="text-sm leading-6 text-[var(--muted)]">
-              For the scaffold, the primary action routes directly into the candidate
-              dashboard shell so information architecture work can begin immediately.
+              This path leads into the candidate workspace where profile building,
+              recommendations, and job interest all come together.
             </p>
             <Link
               className="inline-flex rounded-full bg-[var(--accent-strong)] px-4 py-2 text-sm font-semibold text-white transition hover:bg-[var(--foreground)]"
               href={appRoutes.candidateDashboard}
             >
-              Open candidate dashboard shell
+              Open candidate workspace
             </Link>
           </div>
         </SectionCard>

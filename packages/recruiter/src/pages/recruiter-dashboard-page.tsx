@@ -5,15 +5,18 @@ import {
   appRoutes,
   sampleCandidateProfiles,
   sampleJobPosting,
-  sampleRecruiter,
 } from "@recai/shared";
+import { RecruiterSignOutForm } from "../components/recruiter-sign-out-form";
+import { requireRecruiterSession } from "../server/recruiter-auth";
 
-export function RecruiterDashboardPage() {
+export async function RecruiterDashboardPage() {
+  const recruiter = await requireRecruiterSession();
+
   return (
     <AppShell
       eyebrow="Recruiter Dashboard"
-      title={`${sampleRecruiter.fullName}'s portal`}
-      description="This is the recruiter-side shell for job postings, candidate-pool search, and result-to-profile evaluation."
+      title={`${recruiter.fullName}'s portal`}
+      description={`Recruiter workspace for ${recruiter.company}. This protected dashboard is the home for job postings, candidate-pool search, and recruiter-specific review work.`}
       breadcrumbs={[
         { label: "Home", href: appRoutes.home },
         { label: "Recruiter sign in", href: appRoutes.recruiterSignIn },
@@ -31,8 +34,9 @@ export function RecruiterDashboardPage() {
             className="rounded-full bg-[var(--foreground)] px-4 py-2 text-sm font-semibold text-white transition hover:bg-[var(--accent-strong)]"
             href={appRoutes.recruiterJob(sampleJobPosting.id)}
           >
-            Open sample job posting
+            Open job posting
           </Link>
+          <RecruiterSignOutForm />
         </>
       }
     >
@@ -71,32 +75,36 @@ export function RecruiterDashboardPage() {
         </SectionCard>
 
         <SectionCard
-          eyebrow="Portal Status"
-          title="Recruiter lane is ready to implement"
-          description="The scaffold is already aligned with the recruiter spec: open signup, owned job postings, posting-scoped search, and profile review."
+          eyebrow="Signed In As"
+          title={recruiter.title}
+          description="Your recruiter account stays attached to your workspace and the postings you manage."
         >
           <div className="space-y-4 rounded-[24px] border border-[color:var(--line)] bg-[rgba(15,118,110,0.08)] p-5">
-            <p className="text-sm leading-6 text-[var(--muted)]">
-              This is the clean lane for your work. Candidate flow development can
-              happen in parallel without changing recruiter routes.
-            </p>
+            <div className="rounded-[20px] border border-[color:var(--line)] bg-white/75 px-4 py-4 text-sm leading-6 text-[var(--muted)]">
+              <span className="font-semibold text-[var(--foreground)]">Email:</span>{" "}
+              {recruiter.email}
+            </div>
+            <div className="rounded-[20px] border border-[color:var(--line)] bg-white/75 px-4 py-4 text-sm leading-6 text-[var(--muted)]">
+              <span className="font-semibold text-[var(--foreground)]">Company:</span>{" "}
+              {recruiter.company}
+            </div>
           </div>
         </SectionCard>
       </div>
 
       <div className="grid gap-6 lg:grid-cols-[0.95fr_1.05fr]">
         <SectionCard
-          eyebrow="Search Contract"
-          title="What the recruiter implementation needs next"
-          description="The next recruiter pass should focus on job creation, structured filters, search-pentagon UI, and the natural-language search panel."
+          eyebrow="How You Can Screen"
+          title="Review candidates with more than resume keywords"
+          description="Recruiters can combine structured filters with recommendation-backed evidence to narrow the pool."
         >
           <div className="grid gap-3">
             {[
-              "Create recruiter-owned job postings",
-              "Display opted-in candidate pool counts",
-              "Add structured filters for role and experience",
-              "Add a pentagon minimum-threshold control",
-              "Add a natural-language query panel backed by OpenSearch later",
+              "Review only candidates who opted into your posting",
+              "Filter by role, experience, and fit thresholds",
+              "Look for technical depth, ownership, and leadership signals",
+              "Open job-contextual candidate review pages",
+              "Search for nuanced combinations of skills and behavior",
             ].map((item) => (
               <div
                 key={item}
@@ -109,9 +117,9 @@ export function RecruiterDashboardPage() {
         </SectionCard>
 
         <SectionCard
-          eyebrow="Candidate Pool Preview"
-          title="Mock candidates already exist for recruiter UI work"
-          description="These sample profiles give the recruiter lane real cards, links, and search-result destinations before the backend is connected."
+          eyebrow="Candidate Pool"
+          title="Candidates currently in this posting"
+          description="Open a candidate to review their profile, highlighted evidence, and job-specific fit summary."
         >
           <div className="grid gap-4">
             {sampleCandidateProfiles.map((candidate) => (

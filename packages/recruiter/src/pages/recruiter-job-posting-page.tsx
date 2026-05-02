@@ -8,6 +8,8 @@ import {
   sampleCandidateProfiles,
   sampleJobPosting,
 } from "@recai/shared";
+import { RecruiterSignOutForm } from "../components/recruiter-sign-out-form";
+import { requireRecruiterSession } from "../server/recruiter-auth";
 
 type RecruiterJobPostingPageProps = {
   params: Promise<{
@@ -18,6 +20,7 @@ type RecruiterJobPostingPageProps = {
 export async function RecruiterJobPostingPage({
   params,
 }: RecruiterJobPostingPageProps) {
+  const recruiter = await requireRecruiterSession();
   const { jobId } = await params;
 
   if (jobId !== sampleJobPosting.id) {
@@ -28,19 +31,22 @@ export async function RecruiterJobPostingPage({
     <AppShell
       eyebrow="Recruiter Job Posting"
       title={sampleJobPosting.title}
-      description="This page is the future home of posting-scoped recruiter search. It already reflects the intended split between structured filters, pentagon thresholds, and natural-language search."
+      description={`Posting-scoped recruiter workspace for ${recruiter.fullName}. Narrow the pool with structured filters, evidence thresholds, and natural-language search.`}
       breadcrumbs={[
         { label: "Home", href: appRoutes.home },
         { label: "Recruiter dashboard", href: appRoutes.recruiterDashboard },
         { label: sampleJobPosting.title },
       ]}
       actions={
-        <Link
-          className="rounded-full bg-[var(--foreground)] px-4 py-2 text-sm font-semibold text-white transition hover:bg-[var(--accent-strong)]"
-          href={appRoutes.recruiterDashboard}
-        >
-          Back to dashboard
-        </Link>
+        <>
+          <Link
+            className="rounded-full bg-[var(--foreground)] px-4 py-2 text-sm font-semibold text-white transition hover:bg-[var(--accent-strong)]"
+            href={appRoutes.recruiterDashboard}
+          >
+            Back to dashboard
+          </Link>
+          <RecruiterSignOutForm />
+        </>
       }
     >
       <div className="grid gap-6 xl:grid-cols-[0.95fr_1.05fr]">
@@ -90,8 +96,8 @@ export async function RecruiterJobPostingPage({
 
         <SectionCard
           eyebrow="Natural-Language Search"
-          title="Search prompt scaffold"
-          description="OpenSearch and an LLM will power this path later. For now the page locks in the recruiter UX contract."
+          title="Describe the candidate you want"
+          description="Search in plain language when you want a combination of technical and behavioral proof, not just exact keyword matches."
         >
           <div className="rounded-[24px] border border-[color:var(--line)] bg-[rgba(15,118,110,0.08)] p-5">
             <p className="text-sm uppercase tracking-[0.22em] text-[var(--muted)]">
@@ -108,7 +114,7 @@ export async function RecruiterJobPostingPage({
             </p>
             <p className="mt-3 text-sm leading-6 text-[var(--muted)]">
               Search results return candidate cards ranked by relevance. Clicking a card
-              opens the candidate's recruiter-specific review route.
+              opens the candidate review page with job-specific evidence.
             </p>
           </div>
         </SectionCard>
@@ -116,8 +122,8 @@ export async function RecruiterJobPostingPage({
 
       <SectionCard
         eyebrow="Candidate Pool"
-        title={`Mock results for ${sampleJobPosting.title}`}
-        description="These cards represent the list view that recruiter search returns."
+        title={`Candidates for ${sampleJobPosting.title}`}
+        description="These cards represent the results a recruiter reviews inside this posting."
       >
         <div className="grid gap-4">
           {sampleCandidateProfiles.map((candidate) => (

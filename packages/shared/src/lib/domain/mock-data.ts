@@ -8,6 +8,7 @@ import type {
 
 export const sampleRecruiter: RecruiterAccount = {
   id: "recruiter_001",
+  email: "jordan.ellis@northstarsystems.com",
   fullName: "Jordan Ellis",
   title: "Lead Technical Recruiter",
   company: "Northstar Systems",
