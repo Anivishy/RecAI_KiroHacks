@@ -52,6 +52,10 @@
   - `packages/candidate`
   - `packages/shared`
 - `apps/web/src/app/**` is back to thin route wrappers for platform pages.
+- The current UI foundation on the Kiro Hacks line uses the old-main token and typography system:
+  - warm paper / ink design tokens in `apps/web/src/app/globals.css`
+  - self-hosted General Sans body font
+  - JetBrains Mono for mono utility text
 
 ## Verified Commands
 

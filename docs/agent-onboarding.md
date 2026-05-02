@@ -120,6 +120,7 @@ Recruiter-only overlays should remain in recruiter-owned routes such as `/recrui
 - Embeddings: Pinecone native `multilingual-e5-large`
 - Recruiter AI summary: AWS Bedrock with local fallback
 - Recommender email direction: AWS SES
+- Shared UI foundation: warm paper token system plus self-hosted General Sans and JetBrains Mono
 
 The Kiro Hacks line deploys through the Vercel project `rec-ai-kiro-hacks-web`.
 

@@ -2,23 +2,68 @@
 @source "../../../../packages/**/*.{ts,tsx}";
 
 :root {
-  --background: #f6f3eb;
-  --foreground: #10233d;
-  --surface: rgba(255, 255, 255, 0.82);
-  --surface-strong: #ffffff;
-  --muted: #5f7086;
-  --line: rgba(16, 35, 61, 0.1);
-  --accent: #0f766e;
-  --accent-strong: #155eef;
-  --accent-warm: #ea580c;
-  --shadow: 0 24px 80px rgba(15, 23, 42, 0.08);
+  /* Surfaces — warm paper hierarchy */
+  --paper:        #F6F4EE;
+  --surface:      #FFFFFF;
+  --surface-2:    #FBFAF6;
+  --hairline:     #E6E2D8;
+  --hairline-2:   #D9D4C7;
+
+  /* Ink — 4-step type scale */
+  --ink:          #15201C;
+  --ink-2:        #3A463F;
+  --ink-3:        #6B7670;
+  --ink-4:        #9AA39D;
+
+  /* Verified — emerald accent (the only saturated color) */
+  --verified:     #0E6B4F;
+  --verified-2:   #0A5640;
+  --verified-bg:  #E6F1EC;
+  --verified-bg-2:#D2E6DC;
+
+  /* Recruiter-only chrome — slate */
+  --recruiter:    #2B3A4A;
+  --recruiter-bg: #EEF1F4;
+
+  /* Score / data-viz */
+  --score-track:  #E6E2D8;
+
+  /* Radii */
+  --r-sm: 6px;
+  --r-md: 10px;
+  --r-lg: 14px;
+  --r-xl: 20px;
+
+  /* Shadows — barely-there */
+  --shadow-sm: 0 1px 0 rgba(21,32,28,0.04), 0 1px 2px rgba(21,32,28,0.04);
+  --shadow-md: 0 1px 0 rgba(21,32,28,0.04), 0 6px 18px rgba(21,32,28,0.06);
+  --shadow-lg: 0 12px 40px rgba(21,32,28,0.12);
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
+  --color-paper: var(--paper);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-hairline: var(--hairline);
+  --color-hairline-2: var(--hairline-2);
+  --color-ink: var(--ink);
+  --color-ink-2: var(--ink-2);
+  --color-ink-3: var(--ink-3);
+  --color-ink-4: var(--ink-4);
+  --color-verified: var(--verified);
+  --color-verified-2: var(--verified-2);
+  --color-verified-bg: var(--verified-bg);
+  --color-verified-bg-2: var(--verified-bg-2);
+  --color-recruiter: var(--recruiter);
+  --color-recruiter-bg: var(--recruiter-bg);
+  --color-background: var(--paper);
+  --color-foreground: var(--ink);
   --font-sans: var(--font-body);
   --font-mono: var(--font-mono);
+  --radius-sm: var(--r-sm);
+  --radius-md: var(--r-md);
+  --radius-lg: var(--r-lg);
+  --radius-xl: var(--r-xl);
 }
 
 * {
@@ -31,13 +76,13 @@
   }
 
   body {
-    background:
-      radial-gradient(circle at top left, rgba(21, 94, 239, 0.12), transparent 34%),
-      radial-gradient(circle at top right, rgba(15, 118, 110, 0.12), transparent 28%),
-      linear-gradient(180deg, #fbfaf5 0%, #f3efe4 100%);
-    background-attachment: fixed;
-    color: var(--foreground);
-    font-family: var(--font-body), sans-serif;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: var(--font-body), ui-sans-serif, system-ui, sans-serif;
+    font-size: 15px;
+    line-height: 1.5;
+    font-feature-settings: 'ss01', 'cv11';
+    -webkit-font-smoothing: antialiased;
     min-height: 100vh;
   }
 
@@ -47,45 +92,43 @@
   }
 
   ::selection {
-    background: rgba(21, 94, 239, 0.18);
+    background: var(--verified-bg);
   }
 }
 
-.display-face {
-  font-family: var(--font-display), sans-serif;
+@layer utilities {
+  .mono {
+    font-family: var(--font-mono), ui-monospace, monospace;
+    font-feature-settings: 'zero';
+  }
 }
 
-.glass-panel {
+/* Card primitives — referenced by Card, CardHead, CardPad, CardPadTight components */
+.card {
   background: var(--surface);
-  backdrop-filter: blur(18px);
-  box-shadow: var(--shadow);
+  border: 1px solid var(--hairline);
+  border-radius: var(--r-lg);
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
 }
-
-.grid-pattern {
-  background-image:
-    linear-gradient(rgba(16, 35, 61, 0.04) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(16, 35, 61, 0.04) 1px, transparent 1px);
-  background-position: center;
-  background-size: 24px 24px;
-}
-
-.accent-ring {
-  box-shadow:
-    0 0 0 1px rgba(21, 94, 239, 0.14),
-    0 16px 50px rgba(21, 94, 239, 0.12);
-}
-
-.cover-gradient {
-  background: linear-gradient(120deg, rgba(21, 94, 239, 0.85), rgba(15, 118, 110, 0.85));
-}
-
-.avatar-initials {
-  background: linear-gradient(135deg, #155eef 0%, #0f766e 100%);
-  color: #ffffff;
+.card-head {
   display: flex;
   align-items: center;
-  justify-content: center;
-  font-weight: 700;
-  border: 4px solid #ffffff;
-  box-shadow: 0 4px 16px rgba(15, 23, 42, 0.15);
+  justify-content: space-between;
+  padding: 16px 22px;
+  border-bottom: 1px solid var(--hairline);
+}
+.card-head h3 {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+.card-pad {
+  padding: 22px;
+}
+.card-pad-tight {
+  padding: 14px 22px 18px;
 }
