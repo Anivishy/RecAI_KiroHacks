@@ -121,6 +121,7 @@ Recruiter-only overlays should remain in recruiter-owned routes such as `/recrui
 - Recruiter AI summary: AWS Bedrock with local fallback
 - Recommender email direction: AWS SES
 - Shared UI foundation: warm paper token system plus self-hosted General Sans and JetBrains Mono
+- Trait scoring direction: vector retrieval plus Bedrock rubric scoring
 
 The Kiro Hacks line deploys through the Vercel project `rec-ai-kiro-hacks-web`.
 
@@ -155,6 +156,8 @@ The repo already has:
 - recruiter job posting CRUD backed by Aurora
 - recruiter job posting search backed by Pinecone
 - recruiter candidate review view backed by real candidate data plus recruiter-only AI summary
+- shared technical and behavioral trait-scoring rubric
+- Bedrock-backed structured trait-scoring service foundation
 - lane package split
 - product, architecture, and spec documentation
 
@@ -171,6 +174,7 @@ If behavior or structure changes, also update the relevant product or architectu
 - `docs/product/platform-overview.md`
 - `docs/product/recruiter-portal.md`
 - `docs/product/candidate-workspace.md`
+- `docs/product/trait-scoring.md`
 
 ## Current Product Decisions To Respect
 
@@ -178,12 +182,10 @@ If behavior or structure changes, also update the relevant product or architectu
 - Recruiters do not search globally across all candidates
 - Candidate recommendations are externally authored and verified
 - Candidates can control visibility/order, not recommendation content
-- Pentagon traits currently locked for scaffold work:
-  - Technical Depth
-  - Execution
-  - Ownership
-  - Leadership
-  - Communication
+- The current live pentagon is heuristic and legacy
+- The V2 rubric direction is:
+  - technical: Technical Depth, System Design, Implementation Quality, Problem Solving, Technical Adaptability
+  - behavioral: Ownership, Execution, Leadership, Communication, Collaboration
 
 ## Current Gaps
 

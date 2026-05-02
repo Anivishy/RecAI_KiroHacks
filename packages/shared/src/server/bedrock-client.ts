@@ -1,6 +1,7 @@
 import {
   BedrockRuntimeClient,
-  InvokeModelCommand,
+  ConverseCommand,
+  type ConverseCommandOutput,
 } from "@aws-sdk/client-bedrock-runtime";
 import type { CandidateProfile, RecommendationSnippet } from "../lib/domain/types";
 
@@ -10,11 +11,44 @@ const DEFAULT_REGION = "us-east-1";
 let cachedClient: BedrockRuntimeClient | null = null;
 
 function getClient() {
-  if (cachedClient) return cachedClient;
+  if (cachedClient) {
+    return cachedClient;
+  }
+
   cachedClient = new BedrockRuntimeClient({
     region: process.env.BEDROCK_REGION ?? DEFAULT_REGION,
   });
   return cachedClient;
+}
+
+function resolveModelId(modelId?: string) {
+  return modelId ?? process.env.BEDROCK_MODEL_ID ?? DEFAULT_MODEL;
+}
+
+function extractTextFromResponse(response: ConverseCommandOutput) {
+  const parts = (response.output?.message?.content ?? []) as Array<{ text?: string }>;
+
+  return parts
+    .map((part) => (typeof part.text === "string" ? part.text : ""))
+    .join("\n")
+    .trim();
+}
+
+function extractJsonObject(rawText: string) {
+  const fencedMatch = rawText.match(/```(?:json)?\s*([\s\S]*?)```/i);
+
+  if (fencedMatch?.[1]) {
+    return fencedMatch[1].trim();
+  }
+
+  const firstBrace = rawText.indexOf("{");
+  const lastBrace = rawText.lastIndexOf("}");
+
+  if (firstBrace >= 0 && lastBrace > firstBrace) {
+    return rawText.slice(firstBrace, lastBrace + 1);
+  }
+
+  throw new Error("Bedrock response did not contain a JSON object.");
 }
 
 export type CandidateAISummary = {
@@ -23,7 +57,80 @@ export type CandidateAISummary = {
   generatedAt: Date;
 };
 
-function buildPrompt(
+export type BedrockTextRequest = {
+  systemPrompt?: string;
+  userPrompt: string;
+  modelId?: string;
+  maxTokens?: number;
+  temperature?: number;
+};
+
+export type BedrockTextResult = {
+  model: string;
+  text: string;
+};
+
+export async function generateBedrockText({
+  systemPrompt,
+  userPrompt,
+  modelId,
+  maxTokens = 800,
+  temperature = 0,
+}: BedrockTextRequest): Promise<BedrockTextResult> {
+  const resolvedModelId = resolveModelId(modelId);
+  const client = getClient();
+
+  const command = new ConverseCommand({
+    modelId: resolvedModelId,
+    system: systemPrompt ? [{ text: systemPrompt }] : undefined,
+    messages: [
+      {
+        role: "user",
+        content: [{ text: userPrompt }],
+      },
+    ],
+    inferenceConfig: {
+      maxTokens,
+      temperature,
+    },
+  });
+
+  const response = await client.send(command);
+  const text = extractTextFromResponse(response);
+
+  if (!text) {
+    throw new Error("Bedrock returned an empty response.");
+  }
+
+  return {
+    model: resolvedModelId,
+    text,
+  };
+}
+
+export async function generateBedrockJson<T>({
+  systemPrompt,
+  userPrompt,
+  modelId,
+  maxTokens = 1200,
+  temperature = 0,
+}: BedrockTextRequest): Promise<{ data: T; model: string; rawText: string }> {
+  const result = await generateBedrockText({
+    systemPrompt,
+    userPrompt,
+    modelId,
+    maxTokens,
+    temperature,
+  });
+
+  return {
+    data: JSON.parse(extractJsonObject(result.text)) as T,
+    model: result.model,
+    rawText: result.text,
+  };
+}
+
+function buildSummaryPrompt(
   candidate: CandidateProfile,
   recommendations: RecommendationSnippet[],
 ): string {
@@ -34,21 +141,24 @@ function buildPrompt(
     )
     .join("\n\n");
   const projectBlobs = candidate.projects
-    .map((project) => `${project.title} — ${project.summary}`)
+    .map((project) => `${project.title} - ${project.summary}`)
     .join("\n");
+
   return [
-    "You are summarizing a candidate profile for a recruiter who has the candidate in one of their job pools.",
-    "Use ONLY the verified-recommendation evidence below. Do not invent skills, projects, or roles. Do not include candidate self-description.",
-    "Write 2 to 3 short paragraphs (max 90 words each) of synthesized prose. No bullet lists. No headings.",
-    "",
     `Candidate name: ${candidate.fullName}`,
     `Current role context: ${candidate.currentRole}`,
     "",
+    "Use only the verified recommendation evidence below.",
+    "Do not invent skills, projects, or roles.",
+    "Do not include candidate self-description.",
+    "Write 2 to 3 short recruiter-ready paragraphs, each under 90 words.",
+    "No bullet lists. No headings.",
+    "",
     "Recommendations:",
-    recBlobs,
+    recBlobs || "None.",
     "",
     "Project signals:",
-    projectBlobs,
+    projectBlobs || "None.",
   ].join("\n");
 }
 
@@ -56,44 +166,23 @@ export async function generateCandidateAISummary(
   candidate: CandidateProfile,
   recommendations: RecommendationSnippet[],
 ): Promise<CandidateAISummary> {
-  const modelId = process.env.BEDROCK_MODEL_ID ?? DEFAULT_MODEL;
-  const client = getClient();
-
-  const command = new InvokeModelCommand({
-    modelId,
-    contentType: "application/json",
-    accept: "application/json",
-    body: JSON.stringify({
-      anthropic_version: "bedrock-2023-05-31",
-      max_tokens: 600,
-      temperature: 0.4,
-      messages: [
-        {
-          role: "user",
-          content: [{ type: "text", text: buildPrompt(candidate, recommendations) }],
-        },
-      ],
-    }),
+  const result = await generateBedrockText({
+    systemPrompt:
+      "You summarize verified candidate evidence for recruiters. Use only external recommendation evidence and keep the summary concise, factual, and evidence-based.",
+    userPrompt: buildSummaryPrompt(candidate, recommendations),
+    maxTokens: 600,
+    temperature: 0.4,
   });
 
-  const response = await client.send(command);
-  const decoded = new TextDecoder().decode(response.body as Uint8Array);
-  const json = JSON.parse(decoded) as {
-    content?: Array<{ type: string; text?: string }>;
-  };
-  const text = (json.content ?? [])
-    .filter((part) => part.type === "text")
-    .map((part) => part.text ?? "")
-    .join("\n")
-    .trim();
-  const paragraphs = text
+  const paragraphs = result.text
     .split(/\n{2,}/)
     .map((paragraph) => paragraph.trim())
     .filter((paragraph) => paragraph.length > 0)
     .slice(0, 3);
+
   return {
     paragraphs,
-    model: modelId,
+    model: result.model,
     generatedAt: new Date(),
   };
 }

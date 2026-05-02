@@ -22,6 +22,19 @@ export type {
   RecruiterAccount,
   RecruiterTraitEvidence,
 } from "./lib/domain/types";
+export {
+  behavioralTraitMeta,
+  buildTraitSearchQueries,
+  technicalTraitMeta,
+} from "./lib/scoring/rubric";
+export type {
+  BehavioralTraitDefinition,
+  BehavioralTraitId,
+  TechnicalTraitDefinition,
+  TechnicalTraitId,
+  TraitGroupId,
+  TraitRubricDefinition,
+} from "./lib/scoring/rubric";
 export { appRoutes } from "./lib/routes";
 export { LandingPage } from "./pages/landing-page";
 export * as Icons from "./components/icons";

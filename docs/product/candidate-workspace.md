@@ -37,6 +37,7 @@ The candidate workspace helps candidates build a credible public presence that i
 - The candidate dashboard is real and session-protected.
 - Public candidate profiles resolve from Aurora-backed candidate records plus submitted recommendation evidence.
 - Projects and pentagon scores are currently derived from submitted recommendation text and project tags.
+- The longer-term scoring direction is documented in `docs/product/trait-scoring.md` and moves toward vector-retrieved evidence plus Bedrock scoring.
 - The candidate workspace includes:
   - banner/contact editing
   - recruiter group membership view

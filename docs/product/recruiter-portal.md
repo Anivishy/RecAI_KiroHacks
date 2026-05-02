@@ -38,6 +38,15 @@ Recruiters search the posting-specific candidate pool in two ways:
 - OpenSearch powers retrieval.
 - An LLM interprets the query and ranks candidate matches.
 
+### Scoring Direction
+
+- Recruiter scoring is moving toward two separate pentagons:
+  - technical
+  - behavioral
+- The scoring engine should operate on retrieved evidence segments rather than whole-profile averages.
+- Trait scores should ultimately come from vector retrieval plus rubric-guided Bedrock synthesis.
+- The full rubric lives in `docs/product/trait-scoring.md`.
+
 ### Results
 
 - Results are displayed as a list of candidate profiles.
@@ -57,4 +66,4 @@ Recruiters search the posting-specific candidate pool in two ways:
 ## Open Questions
 
 - The source material suggests both profile parity for all viewers and recruiter-only enhancements such as extra stats or AI summaries. That needs to be finalized before recruiter profile implementation begins.
-- The exact scoring rubric behind the pentagon traits still needs to be defined.
+- The current live pentagon is still heuristic while the Bedrock-backed V2 scoring path is being wired in.

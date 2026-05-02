@@ -100,6 +100,7 @@ npm.cmd run build
 - Search and recruiter KB retrieval: Pinecone serverless vector DB
 - Embedding model: Pinecone native `multilingual-e5-large`
 - Recruiter summary generation: AWS Bedrock with a local fallback path
+- Shared Bedrock runtime path: Converse API for summary generation plus trait-scoring foundation
 - Recommender verification email direction: AWS SES
 
 ## Current Backend Status
@@ -116,6 +117,10 @@ npm.cmd run build
   - Index name on this line: `candidate-profile-index`
 - Search does not require OpenAI.
 - Candidate and recruiter profile/search surfaces now read live data from Aurora-backed records instead of shared runtime mocks.
+- A V2 trait-scoring foundation now exists in shared code:
+  - technical and behavioral rubrics are defined centrally
+  - Bedrock-backed structured scoring service is available
+  - the current live pentagon UI still uses the older heuristic scoring path
 - Aurora envs on this line use the `PROD_*` naming contract from the new Vercel project:
   - `PROD_AWS_REGION`
   - `PROD_AWS_ROLE_ARN`
@@ -136,9 +141,10 @@ npm.cmd run build
 The next most valuable implementation slice is:
 
 1. Eager Pinecone refresh when candidate evidence changes
-2. Candidate-owned profile editing beyond banner fields
-3. Recruiter structured filters and search pentagon controls
-4. SES-backed recommender email delivery
+2. Wire the Bedrock-backed trait-scoring service into recruiter surfaces
+3. Candidate-owned profile editing beyond banner fields
+4. Recruiter structured filters and search pentagon controls
+5. SES-backed recommender email delivery
 
 ## Notes For Future Context
 
