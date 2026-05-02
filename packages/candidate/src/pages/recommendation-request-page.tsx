@@ -1,70 +1,53 @@
 import { notFound } from "next/navigation";
-import {
-  AppShell,
-  SectionCard,
-  appRoutes,
-  sampleRecommendationRequest,
-} from "@recai/shared";
+import Link from "next/link";
+import { appRoutes } from "@recai/shared";
+import { getRecommendationByToken } from "../server/recommendation-db";
+import { RecommendationForm } from "../components/recommendation-form";
 
-type RecommendationRequestPageProps = {
-  params: Promise<{
-    requestId: string;
-  }>;
+type Props = {
+  params: Promise<{ requestId: string }>;
 };
 
-export async function RecommendationRequestPage({
-  params,
-}: RecommendationRequestPageProps) {
-  const { requestId } = await params;
-
-  if (requestId !== sampleRecommendationRequest.id) {
-    notFound();
-  }
+export async function RecommendationRequestPage({ params }: Props) {
+  const { requestId: token } = await params;
+  const rec = await getRecommendationByToken(token);
+  if (!rec) notFound();
 
   return (
-    <AppShell
-      eyebrow="Recommender Flow"
-      title={`Recommendation request for ${sampleRecommendationRequest.candidateName}`}
-      description="Recommenders verify through work email, then submit structured feedback that becomes trusted evidence on the candidate's profile."
-      breadcrumbs={[
-        { label: "Home", href: appRoutes.home },
-        { label: "Recommendation request" },
-      ]}
-    >
-      <div className="grid gap-6 lg:grid-cols-3">
-        {[
-          {
-            step: "01",
-            title: "Verify work email",
-            description:
-              "The recommender enters the access code sent to their work email address.",
-          },
-          {
-            step: "02",
-            title: "Fill the recommendation",
-            description:
-              "The form collects technical, behavioral, and project-level feedback, with optional AI assistance.",
-          },
-          {
-            step: "03",
-            title: "Submit trusted evidence",
-            description:
-              "Once submitted, the candidate can choose whether to display the recommendation, but cannot change its content.",
-          },
-        ].map((card) => (
-          <SectionCard
-            key={card.step}
-            eyebrow={`Step ${card.step}`}
-            title={card.title}
-            description={card.description}
-          >
-            <div className="rounded-[24px] border border-[color:var(--line)] bg-white/75 p-5 text-sm leading-6 text-[var(--muted)]">
-              This step is designed to keep recommendation submission trustworthy and tied
-              to a real professional identity.
-            </div>
-          </SectionCard>
-        ))}
+    <div className="relative min-h-screen">
+      <div className="absolute inset-0 grid-pattern opacity-25" />
+      <div className="relative flex min-h-screen flex-col">
+        <header className="glass-panel sticky top-0 z-20 border-b border-(--line)">
+          <div className="mx-auto flex max-w-3xl items-center justify-between gap-4 px-6 py-3 sm:px-8">
+            <Link
+              className="text-sm font-semibold uppercase tracking-[0.28em] text-(--accent)"
+              href={appRoutes.home}
+            >
+              RecAI
+            </Link>
+            <span className="text-sm text-(--muted)">Recommendation form</span>
+          </div>
+        </header>
+
+        <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-6 px-6 py-8 sm:px-8">
+          <div>
+            <h1 className="text-2xl font-semibold tracking-tight text-foreground">
+              Recommendation for {rec.candidateName}
+            </h1>
+            <p className="mt-1 text-sm text-(--muted)">
+              {rec.status === "submitted"
+                ? "Your recommendation has been submitted."
+                : rec.status === "deleted"
+                  ? "This recommendation has been removed."
+                  : new Date(rec.expiresAt) < new Date()
+                    ? "This link has expired."
+                    : `Link valid until ${new Date(rec.expiresAt).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })}`}
+            </p>
+          </div>
+
+          <RecommendationForm rec={rec} />
+        </main>
       </div>
-    </AppShell>
+    </div>
   );
 }

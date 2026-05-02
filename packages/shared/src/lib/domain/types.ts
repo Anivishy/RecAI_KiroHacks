@@ -118,3 +118,17 @@ export interface RecruiterCandidateReview {
   highlightedRecommendationIds: string[];
   traitEvidence: RecruiterTraitEvidence[];
 }
+
+export interface CandidateAccount {
+  id: string;
+  email: string;
+  fullName: string;
+  slug: string;
+}
+
+export interface CandidateBanner {
+  email: string | null;
+  githubUrl: string | null;
+  linkedinUrl: string | null;
+  websiteUrl: string | null;
+}

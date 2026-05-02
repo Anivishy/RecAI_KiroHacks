@@ -8,7 +8,8 @@ The candidate workspace helps candidates build a credible public presence that i
 
 ### Accounts
 
-- Candidates sign in with their own accounts.
+- Candidates sign in with their own accounts via email and password.
+- The candidate workspace dashboard is a LinkedIn-style profile view that hosts profile banner editing, recommendation request initiation, group membership, and view-own-recommendations.
 - The candidate account owns profile editing, job-posting opt-ins, and recommendation request management.
 
 ### Profile
@@ -16,6 +17,7 @@ The candidate workspace helps candidates build a credible public presence that i
 - Candidates maintain a public-facing profile.
 - The profile includes roles, projects, visible recommendations, and other candidate-selected artifacts.
 - Candidates control presentation and ordering, but do not control the contents of submitted recommendations.
+- The persistent profile banner (email, GitHub, LinkedIn, personal website) is candidate-entered and display-only. It is never indexed for search.
 
 ### Recommendation Requests
 
@@ -39,3 +41,5 @@ The candidate workspace helps candidates build a credible public presence that i
 - Whether recruiters will also see extra recruiter-only profile insights alongside or beyond the public profile.
 - How much of the pentagon explanation is public versus recruiter-specific.
 - Which candidate profile sections should be required before a candidate can opt into a job posting.
+- Whether candidate auth will eventually add OAuth (Google / LinkedIn) and email verification at signup, mirroring the PRD's three-option auth list.
+- The full final set of supported banner contact-link types (email, GitHub, LinkedIn, personal website are confirmed; portfolio, X, Google Scholar, etc. TBD).

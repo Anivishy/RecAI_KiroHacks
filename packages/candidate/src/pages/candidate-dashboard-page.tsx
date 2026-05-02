@@ -1,135 +1,188 @@
 import Link from "next/link";
+import { CandidateBannerEditor } from "../components/candidate-banner-editor";
+import { CandidateProfileHero } from "../components/candidate-profile-hero";
+import { CandidateSignOutForm } from "../components/candidate-sign-out-form";
 import {
-  AppShell,
-  SectionCard,
-  appRoutes,
-  sampleCandidateProfiles,
-  sampleRecommendationRequest,
-} from "@recai/shared";
+  getCandidateBanner,
+  requireCandidateSession,
+} from "../server/candidate-auth";
 
-const candidate = sampleCandidateProfiles[0];
+type CandidateDashboardPageProps = {
+  searchParams: Promise<{
+    error?: string | string[];
+    notice?: string | string[];
+  }>;
+};
 
-export function CandidateDashboardPage() {
+function readSearchParam(value?: string | string[]) {
+  return Array.isArray(value) ? value[0] : value;
+}
+
+function bannerStatusFromParams(
+  noticeCode: string | undefined,
+  errorCode: string | undefined,
+): "saved" | "error" | null {
+  if (noticeCode === "banner-saved") return "saved";
+  if (errorCode === "banner-save-failed") return "error";
+  return null;
+}
+
+export async function CandidateDashboardPage({
+  searchParams,
+}: CandidateDashboardPageProps) {
+  const session = await requireCandidateSession();
+  const banner = await getCandidateBanner(session.id);
+
+  const resolvedSearchParams = await searchParams;
+  const noticeCode = readSearchParam(resolvedSearchParams.notice);
+  const errorCode = readSearchParam(resolvedSearchParams.error);
+  const bannerStatus = bannerStatusFromParams(noticeCode, errorCode);
+
   return (
-    <AppShell
-      eyebrow="Candidate Dashboard"
-      title={`${candidate.fullName}'s workspace`}
-      description="Manage your profile, recommendation requests, and the roles you want recruiters to consider you for."
-      breadcrumbs={[
-        { label: "Home", href: appRoutes.home },
-        { label: "Candidate sign in", href: appRoutes.candidateSignIn },
-        { label: "Dashboard" },
-      ]}
-      actions={
-        <>
+    <div className="relative min-h-screen overflow-hidden">
+      <div className="absolute inset-0 grid-pattern opacity-35" />
+      <div className="relative mx-auto flex min-h-screen max-w-7xl flex-col gap-6 px-6 py-6 sm:px-8 lg:px-12">
+        <header className="glass-panel flex items-center justify-between rounded-full border border-[color:var(--line)] px-5 py-3">
           <Link
-            className="rounded-full border border-[color:var(--line)] bg-white/70 px-4 py-2 text-sm font-semibold text-[var(--foreground)] transition hover:border-[var(--accent)] hover:text-[var(--accent)]"
-            href={appRoutes.publicCandidateProfile(candidate.slug)}
+            className="text-sm font-semibold uppercase tracking-[0.28em] text-[var(--accent)]"
+            href="/"
           >
-            View public profile
+            RecAI
           </Link>
-          <Link
-            className="rounded-full bg-[var(--foreground)] px-4 py-2 text-sm font-semibold text-white transition hover:bg-[var(--accent-strong)]"
-            href={appRoutes.recommenderRequest(sampleRecommendationRequest.id)}
-          >
-            Open recommendation request
-          </Link>
-        </>
-      }
-    >
-      <div className="grid gap-6 xl:grid-cols-[1.1fr_0.9fr]">
-        <SectionCard
-          eyebrow="Profile Snapshot"
-          title="Public profile readiness"
-          description="Track the public signals that shape how recruiters understand your experience."
-        >
-          <div className="grid gap-4 md:grid-cols-3">
-            <div className="rounded-[24px] border border-[color:var(--line)] bg-white/75 p-5">
-              <p className="text-sm uppercase tracking-[0.22em] text-[var(--muted)]">
-                Target roles
-              </p>
-              <p className="mt-3 text-lg font-semibold text-[var(--foreground)]">
-                {candidate.targetRoles.join(" / ")}
-              </p>
-            </div>
-            <div className="rounded-[24px] border border-[color:var(--line)] bg-white/75 p-5">
-              <p className="text-sm uppercase tracking-[0.22em] text-[var(--muted)]">
-                Verified recommendations
-              </p>
-              <p className="mt-3 text-3xl font-semibold text-[var(--foreground)]">
-                {candidate.verifiedRecommendationCount}
-              </p>
-            </div>
-            <div className="rounded-[24px] border border-[color:var(--line)] bg-white/75 p-5">
-              <p className="text-sm uppercase tracking-[0.22em] text-[var(--muted)]">
-                Projects highlighted
-              </p>
-              <p className="mt-3 text-3xl font-semibold text-[var(--foreground)]">
-                {candidate.projects.length}
-              </p>
-            </div>
-          </div>
-        </SectionCard>
+          <p className="hidden text-xs uppercase tracking-[0.22em] text-[var(--muted)] sm:block">
+            Candidate Workspace
+          </p>
+        </header>
 
-        <SectionCard
-          eyebrow="Recommendation Queue"
-          title="Current request state"
-          description="Track open recommendation requests, follow up when needed, and decide which completed recommendations stay public."
-        >
-          <div className="rounded-[24px] border border-[color:var(--line)] bg-white/75 p-5">
-            <p className="text-sm uppercase tracking-[0.22em] text-[var(--muted)]">
-              Active request
-            </p>
-            <h3 className="mt-2 text-xl font-semibold text-[var(--foreground)]">
-              {sampleRecommendationRequest.recommenderName}
-            </h3>
-            <p className="mt-2 text-sm leading-6 text-[var(--muted)]">
-              {sampleRecommendationRequest.relationshipPrompt}
-            </p>
-            <p className="mt-4 text-sm font-medium text-[var(--accent-strong)]">
-              Status: {sampleRecommendationRequest.status}
-            </p>
-          </div>
-        </SectionCard>
-      </div>
+        <CandidateProfileHero candidate={session} banner={banner} />
 
-      <div className="grid gap-6 lg:grid-cols-2">
-        <SectionCard
-          eyebrow="Manage Your Presence"
-          title="Everything candidates control"
-          description="Candidates control what appears on their profile without being able to rewrite what recommenders submit."
-        >
-          <div className="grid gap-3">
-            {[
-              "Profile editing and project management",
-              "Recommendation request tracking",
-              "Recommendation visibility choices",
-              "Job posting opt-in decisions",
-            ].map((item) => (
-              <div
-                key={item}
-                className="rounded-[20px] border border-[color:var(--line)] bg-white/70 px-4 py-4 text-sm leading-6 text-[var(--muted)]"
-              >
-                {item}
+        <div className="grid gap-6 lg:grid-cols-[1fr_320px] lg:items-start">
+          <div className="grid gap-6">
+            <section className="glass-panel rounded-[28px] border border-[color:var(--line)] p-6 sm:p-7">
+              <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[var(--accent-strong)]">
+                Experience
+              </p>
+              <h2 className="display-face mt-2 text-2xl font-semibold tracking-[-0.02em] text-[var(--foreground)]">
+                Roles built from verified recommendations
+              </h2>
+              <p className="mt-2 text-sm leading-6 text-[var(--muted)]">
+                Each verified recommendation creates an experience row tied to the role
+                you held at that time.
+              </p>
+              <div className="mt-5 rounded-[20px] border border-dashed border-[color:var(--line)] bg-white/55 p-6 text-center">
+                <p className="text-sm text-[var(--muted)]">
+                  No recommendations submitted yet — your experience timeline will
+                  appear here.
+                </p>
+                <Link
+                  className="mt-4 inline-flex rounded-full bg-[var(--accent-warm)] px-4 py-2 text-sm font-semibold text-white transition hover:bg-[var(--foreground)]"
+                  href="/candidate/recommendations/new"
+                >
+                  Request a recommendation
+                </Link>
               </div>
-            ))}
-          </div>
-        </SectionCard>
+            </section>
 
-        <SectionCard
-          eyebrow="Why Recommendations Matter"
-          title="Show impact through trusted voices"
-          description="The strongest signal on a RecAI profile is not polished copy. It is what real coworkers and managers say about the work they saw firsthand."
-        >
-          <div className="space-y-4 rounded-[24px] border border-[color:var(--line)] bg-[rgba(234,88,12,0.08)] p-5">
-            <p className="text-sm leading-6 text-[var(--muted)]">
-              Verified recommendations help recruiters trust the profile faster, while
-              giving candidates a more credible way to stand out from AI-polished
-              applications.
-            </p>
+            <section className="glass-panel rounded-[28px] border border-[color:var(--line)] p-6 sm:p-7">
+              <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[var(--accent-strong)]">
+                Recommendations
+              </p>
+              <h2 className="display-face mt-2 text-2xl font-semibold tracking-[-0.02em] text-[var(--foreground)]">
+                Verified voices about your work
+              </h2>
+              <p className="mt-2 text-sm leading-6 text-[var(--muted)]">
+                All submitted recommendations appear here, with the same view recruiters
+                and viewers see.
+              </p>
+              <div className="mt-5 rounded-[20px] border border-dashed border-[color:var(--line)] bg-white/55 p-6 text-center">
+                <p className="text-sm text-[var(--muted)]">
+                  No recommendations submitted about you yet.
+                </p>
+              </div>
+            </section>
+
+            <section className="glass-panel rounded-[28px] border border-[color:var(--line)] p-6 sm:p-7">
+              <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[var(--accent-strong)]">
+                Recruiter Groups
+              </p>
+              <h2 className="display-face mt-2 text-2xl font-semibold tracking-[-0.02em] text-[var(--foreground)]">
+                Job pools you have joined
+              </h2>
+              <p className="mt-2 text-sm leading-6 text-[var(--muted)]">
+                You join a recruiter group by clicking the RecAI link inside their
+                external job posting.
+              </p>
+              <div className="mt-5 rounded-[20px] border border-dashed border-[color:var(--line)] bg-white/55 p-6 text-center">
+                <p className="text-sm text-[var(--muted)]">
+                  You haven&apos;t joined any recruiter groups yet.
+                </p>
+                <Link
+                  className="mt-4 inline-flex rounded-full border border-[color:var(--line)] bg-white px-4 py-2 text-sm font-semibold text-[var(--foreground)] transition hover:border-[var(--accent)] hover:text-[var(--accent)]"
+                  href="/candidate/groups"
+                >
+                  Open groups manager
+                </Link>
+              </div>
+            </section>
           </div>
-        </SectionCard>
+
+          <aside className="grid gap-4">
+            <CandidateBannerEditor banner={banner} status={bannerStatus} />
+
+            <section className="rounded-[22px] border border-[color:var(--line)] bg-[rgba(234,88,12,0.08)] p-5">
+              <div className="flex items-center justify-between gap-3">
+                <h3 className="text-base font-semibold text-[var(--foreground)]">
+                  Request a recommendation
+                </h3>
+                <span className="rounded-full bg-[rgba(234,88,12,0.18)] px-3 py-1 text-[10px] font-bold uppercase tracking-[0.18em] text-[var(--accent-warm)]">
+                  Coming next
+                </span>
+              </div>
+              <p className="mt-1 text-xs leading-5 text-[var(--muted)]">
+                Enter a recommender&apos;s email and the role you want them to comment on.
+              </p>
+              <Link
+                className="mt-4 inline-flex w-full items-center justify-center rounded-full bg-[var(--accent-warm)] px-4 py-2 text-sm font-semibold text-white transition hover:bg-[var(--foreground)]"
+                href="/candidate/recommendations/new"
+              >
+                Start a request
+              </Link>
+            </section>
+
+            <section className="rounded-[22px] border border-[color:var(--line)] bg-white/70 p-5">
+              <div className="flex items-center justify-between gap-3">
+                <h3 className="text-base font-semibold text-[var(--foreground)]">
+                  Recruiter groups
+                </h3>
+                <span className="rounded-full bg-[rgba(95,112,134,0.18)] px-3 py-1 text-[10px] font-bold uppercase tracking-[0.18em] text-[var(--muted)]">
+                  Coming next
+                </span>
+              </div>
+              <p className="mt-1 text-xs leading-5 text-[var(--muted)]">
+                Manage every recruiter group you&apos;ve joined.
+              </p>
+              <Link
+                className="mt-4 inline-flex w-full items-center justify-center rounded-full border border-[color:var(--line)] bg-white px-4 py-2 text-sm font-semibold text-[var(--foreground)] transition hover:border-[var(--accent)] hover:text-[var(--accent)]"
+                href="/candidate/groups"
+              >
+                Manage groups
+              </Link>
+            </section>
+
+            <section className="rounded-[22px] border border-[color:var(--line)] bg-white/70 p-5">
+              <h3 className="text-base font-semibold text-[var(--foreground)]">Account</h3>
+              <p className="mt-1 text-xs leading-5 text-[var(--muted)]">
+                Sign out of the candidate workspace.
+              </p>
+              <div className="mt-4">
+                <CandidateSignOutForm
+                  className="inline-flex w-full items-center justify-center rounded-full border border-[color:var(--line)] bg-white px-4 py-2 text-sm font-semibold text-[var(--foreground)] transition hover:border-[var(--accent)] hover:text-[var(--accent)]"
+                />
+              </div>
+            </section>
+          </aside>
+        </div>
       </div>
-    </AppShell>
+    </div>
   );
 }

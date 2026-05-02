@@ -167,20 +167,21 @@ If behavior or structure changes, also update the relevant product or architectu
 The repo already has:
 
 - landing page
-- candidate sign-in experience
+- candidate sign-in with real account creation/login routes
+- candidate workspace dashboard (LinkedIn-style) protected by candidate session
+- candidate banner editor wired to Aurora
 - recruiter sign-in with real account creation/login routes
-- candidate dashboard experience
 - recruiter dashboard protected by recruiter session
 - recruiter job posting route protected by recruiter session
 - recruiter-owned candidate review route
-- public candidate profile
+- public candidate profile (still mock-backed pending candidate slice B)
 - recommender request experience
 - lane package split
 - product, architecture, and spec documentation
 
 ## Immediate Priority
 
-The next most valuable implementation lane is recruiter.
+The next most valuable implementation lanes are split between recruiter and candidate.
 
 Recommended order:
 

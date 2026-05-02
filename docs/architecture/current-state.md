@@ -49,9 +49,11 @@ npm.cmd run build
   - recruiter job posting candidate search (Pinecone + Claude)
   - recruiter-owned candidate review view
 - Candidate lane:
-  - candidate sign-in
-  - candidate dashboard
-  - public candidate profile
+  - candidate sign-in (real signup/signin forms)
+  - candidate workspace dashboard (LinkedIn-style, session-gated)
+  - candidate banner editor wired to Aurora
+  - candidate auth backend and protected sessions
+  - public candidate profile (still mock-backed pending slice B)
   - recommender request flow shell
 - Shared lane:
   - landing page

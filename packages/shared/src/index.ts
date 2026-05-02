@@ -13,6 +13,8 @@ export {
 } from "./lib/domain/mock-data";
 export { pentagonTraitMeta } from "./lib/domain/types";
 export type {
+  CandidateAccount,
+  CandidateBanner,
   CandidateProfile,
   CandidateProject,
   JobPosting,
