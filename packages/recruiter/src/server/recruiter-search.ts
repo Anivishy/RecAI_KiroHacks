@@ -2,7 +2,7 @@ import { Pinecone } from "@pinecone-database/pinecone";
 import { getCandidateProfilesForPosting } from "@recai/candidate/server/candidate-profile-db";
 import type { CandidateProfile } from "@recai/shared";
 
-const INDEX_NAME = "candidates-vector-db";
+const INDEX_NAME = "candidate-profile-index";
 
 let pineconeClient: Pinecone | null = null;
 
