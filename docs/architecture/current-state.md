@@ -29,6 +29,12 @@
   - recommender opens `/recommend/[token]`
   - recommender can save draft, submit, and delete after submission
   - tokens expire after 7 days
+- Shared, candidate, recruiter, and recommender surfaces have a redesigned UI system:
+  - shared card, nav, icon, and rail primitives
+  - redesigned landing page
+  - redesigned candidate dashboard and public profile
+  - redesigned recruiter dashboard, posting page, and recruiter candidate review
+  - redesigned recommender form
 - Candidate profile storage is Aurora-backed:
   - public candidate profiles now resolve from `candidate_accounts` plus submitted recommendation data
   - projects, recommendation snippets, and pentagon scores are derived from submitted recommendations
@@ -38,6 +44,9 @@
   - lazy indexing on first search for a posting
   - search results now come from real joined candidates rather than shared mocks
 - Recruiter candidate review pages now open against real candidate profiles and real posting membership.
+- Recruiter candidate review pages now include a recruiter-only AI summary rail:
+  - uses Bedrock when available
+  - falls back to a deterministic local summary if Bedrock is unavailable
 - Recruiter, candidate, and shared code live in separate packages:
   - `packages/recruiter`
   - `packages/candidate`
@@ -86,6 +95,7 @@ npm.cmd run build
 - Recruiter and candidate auth path: app-managed Aurora-backed sessions
 - Search and recruiter KB retrieval: Pinecone serverless vector DB
 - Embedding model: Pinecone native `multilingual-e5-large`
+- Recruiter summary generation: AWS Bedrock with a local fallback path
 - Recommender verification email direction: AWS SES
 
 ## Current Backend Status

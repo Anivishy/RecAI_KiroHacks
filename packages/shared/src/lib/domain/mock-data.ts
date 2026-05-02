@@ -36,7 +36,7 @@ export const sampleCandidateProfiles: CandidateProfile[] = [
     yearsExperience: 6,
     targetRoles: ["Platform Engineer", "Backend Engineer", "Engineering Lead"],
     bio: "Maya has spent the last several years building Python services, internal developer tooling, and reliability systems that helped product teams ship faster with fewer incidents.",
-    verifiedRecommendationCount: 4,
+    verifiedRecommendationCount: 3,
     pentagonScores: {
       technicalDepth: 5,
       execution: 4,
@@ -80,14 +80,26 @@ export const sampleCandidateProfiles: CandidateProfile[] = [
       {
         id: "rec_maya_2",
         recommenderName: "Sara Ibrahim",
-        recommenderTitle: "Product Director",
-        company: "North Harbor",
+        recommenderTitle: "Senior Engineering Manager",
+        company: "Stripe",
         relationship: "Cross-functional partner",
         submittedAt: "2026-03-29",
         summary:
           "Maya communicated tradeoffs with uncommon clarity and helped product teams understand the operational realities behind backend and platform decisions.",
         skillsMentioned: ["Communication", "Leadership"],
         projectTitles: ["Internal Developer Portal"],
+      },
+      {
+        id: "rec_maya_3",
+        recommenderName: "Avery Park",
+        recommenderTitle: "Director of Platform Engineering",
+        company: "Figma",
+        relationship: "Former manager",
+        submittedAt: "2026-04-08",
+        summary:
+          "Maya is the engineer I trust to inherit the gnarliest reliability work and turn it into something the rest of the team can actually operate. She communicates tradeoffs clearly and writes great post-incident docs.",
+        skillsMentioned: ["Reliability", "Communication", "Operability"],
+        projectTitles: ["Reliability Control Plane"],
       },
     ],
   },
@@ -100,7 +112,7 @@ export const sampleCandidateProfiles: CandidateProfile[] = [
     yearsExperience: 8,
     targetRoles: ["Full-Stack Engineer", "Staff Engineer", "Technical Lead"],
     bio: "Diego blends product intuition with systems thinking and is strongest when leading cross-functional initiatives that need both front-end polish and backend pragmatism.",
-    verifiedRecommendationCount: 3,
+    verifiedRecommendationCount: 1,
     pentagonScores: {
       technicalDepth: 4,
       execution: 5,

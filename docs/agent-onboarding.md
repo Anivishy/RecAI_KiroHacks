@@ -55,6 +55,7 @@ This repo uses one Next.js app plus separate lane packages.
   - shared domain types
   - routes
   - landing page
+  - top nav, card, icon, mono, and rail primitives
   - sample landing-page showcase data
 
 - `packages/candidate`
@@ -117,6 +118,7 @@ Recruiter-only overlays should remain in recruiter-owned routes such as `/recrui
 - Auth: app-managed recruiter and candidate sessions stored in Aurora
 - Search: Pinecone serverless vector search
 - Embeddings: Pinecone native `multilingual-e5-large`
+- Recruiter AI summary: AWS Bedrock with local fallback
 - Recommender email direction: AWS SES
 
 The Kiro Hacks line deploys through the Vercel project `rec-ai-kiro-hacks-web`.
@@ -139,6 +141,7 @@ These commands currently pass.
 The repo already has:
 
 - landing page
+- redesigned shared navigation and card system
 - candidate sign-in with real account creation/login routes
 - candidate dashboard protected by candidate session
 - candidate banner editor wired to Aurora
@@ -150,7 +153,7 @@ The repo already has:
 - recruiter dashboard protected by recruiter session
 - recruiter job posting CRUD backed by Aurora
 - recruiter job posting search backed by Pinecone
-- recruiter candidate review view backed by real candidate data
+- recruiter candidate review view backed by real candidate data plus recruiter-only AI summary
 - lane package split
 - product, architecture, and spec documentation
 

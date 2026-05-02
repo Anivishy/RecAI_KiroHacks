@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { AppShell, SectionCard, appRoutes } from "@recai/shared";
+import { Card, CardHead, CardPad, Mono, TopNav, appRoutes } from "@recai/shared";
 import { getJoinedPostingsForCandidate } from "@recai/recruiter/server/recruiter-jobs";
 import { requireCandidateSession } from "../server/candidate-auth";
 
@@ -16,64 +16,64 @@ export async function CandidateGroupsPage() {
   const joinedPostings = await getJoinedPostingsForCandidate(session.id);
 
   return (
-    <AppShell
-      eyebrow="Recruiter Groups"
-      title="Postings you have joined through recruiter invite links"
-      description="Each group below represents one recruiter-owned job posting whose candidate pool now includes your profile."
-      breadcrumbs={[
-        { label: "Home", href: appRoutes.home },
-        { label: "Candidate dashboard", href: appRoutes.candidateDashboard },
-        { label: "Recruiter groups" },
-      ]}
-      actions={
-        <Link
-          className="rounded-full bg-[var(--foreground)] px-4 py-2 text-sm font-semibold text-white transition hover:bg-[var(--accent-strong)]"
-          href={appRoutes.candidateDashboard}
-        >
-          Back to dashboard
-        </Link>
-      }
-    >
-      <SectionCard
-        eyebrow="Joined Pools"
-        title={
-          joinedPostings.length > 0
-            ? `${joinedPostings.length} recruiter pool${joinedPostings.length === 1 ? "" : "s"}`
-            : "No recruiter pools joined yet"
-        }
-        description="Recruiters search each posting-specific pool independently. Joining one posting does not make you searchable everywhere."
-      >
-        {joinedPostings.length > 0 ? (
-          <div className="grid gap-4">
-            {joinedPostings.map((posting) => (
-              <div
-                key={posting.jobId}
-                className="rounded-[24px] border border-[color:var(--line)] bg-white/75 p-5"
-              >
-                <div className="flex flex-wrap items-start justify-between gap-4">
-                  <div>
-                    <h3 className="text-lg font-semibold text-[var(--foreground)]">
-                      {posting.title}
-                    </h3>
-                    <p className="mt-1 text-sm text-[var(--muted)]">
-                      {posting.location} - {posting.employmentType} -{" "}
-                      {posting.experienceLevel}
-                    </p>
-                  </div>
-                  <p className="text-sm text-[var(--muted)]">
-                    Joined {formatDate(posting.joinedAt)}
-                  </p>
-                </div>
-              </div>
-            ))}
+    <>
+      <TopNav viewer={{ role: "candidate", fullName: session.fullName }} showSearch={false} />
+      <main className="mx-auto flex w-full max-w-[1240px] flex-1 flex-col gap-6 px-6 py-7 pb-16 sm:px-8">
+        <div className="flex flex-wrap items-end justify-between gap-4">
+          <div>
+            <p className="text-[12px] font-semibold uppercase tracking-[0.12em] text-[color:var(--ink-3)]">
+              Candidate workspace
+            </p>
+            <h1 className="mt-1 text-[26px] font-semibold tracking-[-0.02em] text-[color:var(--ink)]">
+              Recruiter groups
+            </h1>
           </div>
-        ) : (
-          <div className="rounded-[20px] border border-dashed border-[color:var(--line)] bg-white/55 p-6 text-sm leading-6 text-[var(--muted)]">
-            You have not joined any recruiter pools yet. Use a recruiter&apos;s RecAI invite
-            link and sign in to be added to that posting&apos;s candidate set.
-          </div>
-        )}
-      </SectionCard>
-    </AppShell>
+          <Link
+            className="inline-flex items-center rounded-full border border-[color:var(--hairline)] bg-[color:var(--surface)] px-4 py-2 text-[13px] font-semibold text-[color:var(--ink)] transition hover:border-[color:var(--ink-3)]"
+            href={appRoutes.candidateDashboard}
+          >
+            Back to dashboard
+          </Link>
+        </div>
+
+        <Card>
+          <CardHead
+            eyebrow={`Recruiter groups · ${joinedPostings.length}`}
+            meta={<Mono>{joinedPostings.length === 1 ? "1 pool" : `${joinedPostings.length} pools`}</Mono>}
+          />
+          <CardPad>
+            {joinedPostings.length === 0 ? (
+              <p className="text-[13px] leading-6 text-[color:var(--ink-3)]">
+                You have not joined any recruiter pools yet. Use a recruiter&apos;s recAI invite
+                link and sign in to be added to that posting&apos;s candidate set.
+              </p>
+            ) : (
+              <ul className="grid gap-3">
+                {joinedPostings.map((posting) => (
+                  <li
+                    key={posting.jobId}
+                    className="rounded-[var(--r-md)] border border-[color:var(--hairline)] bg-[color:var(--surface-2)] px-4 py-3"
+                  >
+                    <div className="flex flex-wrap items-start justify-between gap-3">
+                      <div className="min-w-0">
+                        <div className="text-[14px] font-semibold text-[color:var(--ink)]">
+                          {posting.title}
+                        </div>
+                        <div className="mt-0.5 text-[12px] text-[color:var(--ink-3)]">
+                          {posting.location} · {posting.employmentType} · {posting.experienceLevel}
+                        </div>
+                      </div>
+                      <Mono className="shrink-0 text-[11px] text-[color:var(--ink-3)]">
+                        joined {formatDate(posting.joinedAt)}
+                      </Mono>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </CardPad>
+        </Card>
+      </main>
+    </>
   );
 }

@@ -1,7 +1,3 @@
-export { AppShell } from "./components/app-shell";
-export { PentagonChart } from "./components/pentagon-chart";
-export { RoleCard } from "./components/role-card";
-export { SectionCard } from "./components/section-card";
 export {
   getCandidateProfileBySlug,
   getRecruiterCandidateReview,
@@ -28,3 +24,29 @@ export type {
 } from "./lib/domain/types";
 export { appRoutes } from "./lib/routes";
 export { LandingPage } from "./pages/landing-page";
+export * as Icons from "./components/icons";
+export { Card, CardHead, CardPad, CardPadTight } from "./components/card";
+export { Mono } from "./components/mono";
+export { TopNav } from "./components/top-nav";
+export type { TopNavViewer } from "./components/top-nav";
+export {
+  buildExperienceRows,
+  buildPentagonForRecruiter,
+  buildRelationMix,
+  buildTrustStats,
+  companyToDomain,
+  deterministicSimilarity,
+  recommenderBrandColor,
+} from "./lib/profile-derivations";
+export type {
+  DomainEntry,
+  ExperienceRow,
+  PentagonProject,
+  PentagonTrait,
+  RelationMixEntry,
+  TrustStats,
+} from "./lib/profile-derivations";
+export { TrustCard } from "./components/rail/trust-card";
+export { RelationMix } from "./components/rail/relation-mix";
+export { VerifiedDomains } from "./components/rail/verified-domains";
+export { HowRecAIScores } from "./components/rail/how-recai-scores";

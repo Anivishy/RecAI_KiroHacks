@@ -33,11 +33,11 @@ function TagInput({
   }
 
   return (
-    <div className="rounded-xl border border-(--line) bg-white/90 px-3 py-2">
+    <div className="rounded-xl border border-[color:var(--hairline)] bg-[color:var(--surface)] px-3 py-2">
       <div className="flex flex-wrap gap-1.5 mb-1.5">
         {skills.map((s) => (
           <span
-            className="inline-flex items-center gap-1 rounded-md bg-[rgba(15,118,110,0.08)] px-2 py-0.5 text-xs font-medium text-(--accent)"
+            className="inline-flex items-center gap-1 rounded-md bg-[color:var(--verified-bg)] px-2 py-0.5 text-xs font-medium text-[color:var(--verified)]"
             key={s}
           >
             {s}
@@ -52,7 +52,7 @@ function TagInput({
         ))}
       </div>
       <input
-        className="w-full bg-transparent text-sm text-foreground outline-none placeholder:text-(--muted)"
+        className="w-full bg-transparent text-sm text-[color:var(--ink)] outline-none placeholder:text-[color:var(--ink-4)]"
         onBlur={() => { if (input.trim()) add(input); }}
         onChange={(e) => setInput(e.target.value)}
         onKeyDown={(e) => {
@@ -86,7 +86,7 @@ function Textarea({
 }) {
   return (
     <textarea
-      className="w-full rounded-xl border border-(--line) bg-white/90 px-3 py-2.5 text-sm text-foreground outline-none transition placeholder:text-(--muted) focus:border-(--accent) focus:ring-1 focus:ring-(--accent) resize-none"
+      className="mt-1 w-full rounded-[var(--r-md)] border border-[color:var(--hairline-2)] bg-[color:var(--surface)] px-3 py-2 text-[13px] text-[color:var(--ink)] outline-none transition placeholder:text-[color:var(--ink-4)] focus:border-[color:var(--verified)] focus:ring-[3px] focus:ring-[color:var(--verified-bg)] resize-none"
       onChange={(e) => onChange(e.target.value)}
       placeholder={placeholder}
       rows={minRows}
@@ -107,10 +107,10 @@ function Card({
   children: React.ReactNode;
 }) {
   return (
-    <div className="overflow-hidden rounded-2xl border border-(--line) bg-white/70 shadow-sm backdrop-blur-sm">
-      <div className="border-b border-(--line) px-5 py-4">
-        <h2 className="font-semibold text-foreground">{title}</h2>
-        {hint && <p className="mt-0.5 text-sm text-(--muted)">{hint}</p>}
+    <div className="overflow-hidden rounded-2xl border border-[color:var(--hairline)] bg-[color:var(--surface)] shadow-sm backdrop-blur-sm">
+      <div className="border-b border-[color:var(--hairline)] px-5 py-4">
+        <h2 className="font-semibold text-[color:var(--ink)]">{title}</h2>
+        {hint && <p className="mt-0.5 text-sm text-[color:var(--ink-3)]">{hint}</p>}
       </div>
       <div className="p-5">{children}</div>
     </div>
@@ -194,8 +194,8 @@ export function RecommendationForm({ rec: initial }: Props) {
   if (status === "deleted") {
     return (
       <div className="flex min-h-[40vh] flex-col items-center justify-center gap-3 text-center px-4">
-        <p className="text-lg font-semibold text-foreground">Recommendation removed</p>
-        <p className="text-sm text-(--muted)">
+        <p className="text-lg font-semibold text-[color:var(--ink)]">Recommendation removed</p>
+        <p className="text-sm text-[color:var(--ink-3)]">
           This recommendation has been deleted and is no longer visible.
         </p>
       </div>
@@ -205,26 +205,26 @@ export function RecommendationForm({ rec: initial }: Props) {
   if (status === "submitted") {
     return (
       <div className="mx-auto flex max-w-xl flex-col gap-6 py-10">
-        <div className="rounded-2xl border border-(--line) bg-white/70 shadow-sm backdrop-blur-sm p-8 text-center">
-          <div className="mb-3 inline-flex h-12 w-12 items-center justify-center rounded-full bg-[rgba(15,118,110,0.1)] text-2xl">
+        <div className="rounded-2xl border border-[color:var(--hairline)] bg-[color:var(--surface)] shadow-sm backdrop-blur-sm p-8 text-center">
+          <div className="mb-3 inline-flex h-12 w-12 items-center justify-center rounded-full bg-[color:var(--verified-bg)] text-2xl text-[color:var(--verified)]">
             ✓
           </div>
-          <h2 className="text-lg font-semibold text-foreground">Recommendation submitted</h2>
-          <p className="mt-1 text-sm text-(--muted)">
+          <h2 className="text-lg font-semibold text-[color:var(--ink)]">Recommendation submitted</h2>
+          <p className="mt-1 text-sm text-[color:var(--ink-3)]">
             Your recommendation for <strong>{initial.candidateName}</strong> has been recorded.
             Thank you.
           </p>
         </div>
 
-        <div className="rounded-2xl border border-red-100 bg-white/70 shadow-sm backdrop-blur-sm p-5">
-          <p className="text-sm font-medium text-foreground mb-1">Remove this recommendation</p>
-          <p className="text-sm text-(--muted) mb-4">
+        <div className="rounded-2xl border border-red-100 bg-[color:var(--surface)] shadow-sm backdrop-blur-sm p-5">
+          <p className="text-sm font-medium text-[color:var(--ink)] mb-1">Remove this recommendation</p>
+          <p className="text-sm text-[color:var(--ink-3)] mb-4">
             If you'd like your recommendation to be removed from {initial.candidateName}'s profile,
             you can delete it here. This cannot be undone.
           </p>
           {deleteState === "confirming" ? (
             <div className="flex items-center gap-3">
-              <span className="text-sm text-(--muted)">Are you sure? This is permanent.</span>
+              <span className="text-sm text-[color:var(--ink-3)]">Are you sure? This is permanent.</span>
               <button
                 className="rounded-lg border border-red-200 bg-red-50 px-3 py-1.5 text-sm font-medium text-red-600 transition hover:bg-red-100"
                 onClick={handleDelete}
@@ -233,7 +233,7 @@ export function RecommendationForm({ rec: initial }: Props) {
                 Yes, delete
               </button>
               <button
-                className="text-sm text-(--muted) hover:text-foreground"
+                className="text-sm text-[color:var(--ink-3)] hover:text-[color:var(--ink)]"
                 onClick={() => setDeleteState("idle")}
                 type="button"
               >
@@ -258,8 +258,8 @@ export function RecommendationForm({ rec: initial }: Props) {
   if (isExpired) {
     return (
       <div className="flex min-h-[40vh] flex-col items-center justify-center gap-3 text-center px-4">
-        <p className="text-lg font-semibold text-foreground">This link has expired</p>
-        <p className="text-sm text-(--muted)">
+        <p className="text-lg font-semibold text-[color:var(--ink)]">This link has expired</p>
+        <p className="text-sm text-[color:var(--ink-3)]">
           Recommendation links are valid for 7 days. Please ask {initial.candidateName} to send a
           new request.
         </p>
@@ -279,8 +279,8 @@ export function RecommendationForm({ rec: initial }: Props) {
           <div className="flex flex-col gap-2 text-sm">
             {initial.recommenderName && (
               <div className="flex items-center gap-2">
-                <span className="text-(--muted) w-24 shrink-0">Your name</span>
-                <span className="font-medium text-foreground">
+                <span className="text-[color:var(--ink-3)] w-24 shrink-0">Your name</span>
+                <span className="font-medium text-[color:var(--ink)]">
                   {initial.recommenderName}
                   {initial.recommenderTitle ? ` · ${initial.recommenderTitle}` : ""}
                   {initial.recommenderCompany ? `, ${initial.recommenderCompany}` : ""}
@@ -289,13 +289,13 @@ export function RecommendationForm({ rec: initial }: Props) {
             )}
             {initial.relationship && (
               <div className="flex items-center gap-2">
-                <span className="text-(--muted) w-24 shrink-0">Relationship</span>
-                <span className="font-medium text-foreground">{initial.relationship}</span>
+                <span className="text-[color:var(--ink-3)] w-24 shrink-0">Relationship</span>
+                <span className="font-medium text-[color:var(--ink)]">{initial.relationship}</span>
               </div>
             )}
             {initial.candidateContext && (
-              <div className="mt-1 rounded-xl bg-[rgba(15,118,110,0.04)] border border-(--line) px-4 py-3">
-                <p className="text-(--muted) italic">"{initial.candidateContext}"</p>
+              <div className="mt-1 rounded-xl bg-[color:var(--verified-bg)] border border-[color:var(--hairline)] px-4 py-3">
+                <p className="text-[color:var(--ink-3)] italic">"{initial.candidateContext}"</p>
               </div>
             )}
           </div>
@@ -333,11 +333,11 @@ export function RecommendationForm({ rec: initial }: Props) {
       >
         <div className="flex flex-col gap-5">
           {projects.map((project, idx) => (
-            <div className="rounded-xl border border-(--line) bg-white/60 p-4" key={project.id}>
+            <div className="rounded-xl border border-[color:var(--hairline)] bg-[color:var(--surface)] p-4" key={project.id}>
               <div className="mb-3 flex items-center justify-between">
-                <span className="text-sm font-medium text-foreground">Project {idx + 1}</span>
+                <span className="text-sm font-medium text-[color:var(--ink)]">Project {idx + 1}</span>
                 <button
-                  className="text-xs text-(--muted) hover:text-red-500 transition"
+                  className="text-xs text-[color:var(--ink-3)] hover:text-red-500 transition"
                   onClick={() => setProjects((ps) => ps.filter((p) => p.id !== project.id))}
                   type="button"
                 >
@@ -346,7 +346,7 @@ export function RecommendationForm({ rec: initial }: Props) {
               </div>
               <div className="flex flex-col gap-3">
                 <input
-                  className="h-9 w-full rounded-lg border border-(--line) bg-white/90 px-3 text-sm text-foreground outline-none transition placeholder:text-(--muted) focus:border-(--accent) focus:ring-1 focus:ring-(--accent)"
+                  className="mt-1 w-full rounded-[var(--r-md)] border border-[color:var(--hairline-2)] bg-[color:var(--surface)] px-3 py-2 text-[13px] text-[color:var(--ink)] outline-none transition placeholder:text-[color:var(--ink-4)] focus:border-[color:var(--verified)] focus:ring-[3px] focus:ring-[color:var(--verified-bg)]"
                   onChange={(e) => updateProject(project.id, { title: e.target.value })}
                   placeholder="Project name"
                   type="text"
@@ -359,7 +359,7 @@ export function RecommendationForm({ rec: initial }: Props) {
                   value={project.description}
                 />
                 <div>
-                  <label className="mb-1.5 block text-xs font-medium text-(--muted)">
+                  <label className="mb-1.5 block text-xs font-medium text-[color:var(--ink-3)]">
                     Skills & technologies used
                   </label>
                   <TagInput
@@ -373,7 +373,7 @@ export function RecommendationForm({ rec: initial }: Props) {
 
           {projects.length < MAX_PROJECTS && (
             <button
-              className="flex items-center gap-2 rounded-xl border border-dashed border-(--line) px-4 py-3 text-sm text-(--muted) transition hover:border-(--accent) hover:text-(--accent)"
+              className="flex items-center gap-2 rounded-xl border border-dashed border-[color:var(--hairline)] px-4 py-3 text-sm text-[color:var(--ink-3)] transition hover:border-[color:var(--verified)] hover:text-[color:var(--verified)]"
               onClick={() => setProjects((ps) => [...ps, newProject()])}
               type="button"
             >
@@ -385,22 +385,22 @@ export function RecommendationForm({ rec: initial }: Props) {
       </Card>
 
       {/* Actions */}
-      <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-(--line) bg-white/70 shadow-sm backdrop-blur-sm px-5 py-4">
+      <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-[color:var(--hairline)] bg-[color:var(--surface)] shadow-sm backdrop-blur-sm px-5 py-4">
         <div className="flex items-center gap-3">
           {saveState === "saved" && (
-            <span className="text-sm text-(--accent)">Draft saved</span>
+            <span className="text-sm text-[color:var(--verified)]">Draft saved</span>
           )}
           {saveState === "error" && (
             <span className="text-sm text-red-500">Save failed</span>
           )}
           {status === "draft" && saveState === "idle" && (
-            <span className="text-xs text-(--muted)">Draft in progress</span>
+            <span className="text-xs text-[color:var(--ink-3)]">Draft in progress</span>
           )}
         </div>
 
         <div className="flex items-center gap-3">
           <button
-            className="h-9 rounded-xl border border-(--line) bg-white px-4 text-sm font-medium text-(--muted) transition hover:border-(--accent) hover:text-(--accent) disabled:opacity-50"
+            className="inline-flex items-center justify-center rounded-full border border-[color:var(--hairline)] bg-[color:var(--surface)] px-4 py-2 text-[13px] font-semibold text-[color:var(--ink)] transition hover:border-[color:var(--ink-3)] disabled:opacity-50"
             disabled={saveState === "saving"}
             onClick={handleSave}
             type="button"
@@ -410,16 +410,16 @@ export function RecommendationForm({ rec: initial }: Props) {
 
           {submitState === "confirming" ? (
             <div className="flex items-center gap-2">
-              <span className="text-sm text-(--muted)">Submit and lock this response?</span>
+              <span className="text-sm text-[color:var(--ink-3)]">Submit and lock this response?</span>
               <button
-                className="h-9 rounded-xl bg-(--accent) px-4 text-sm font-semibold text-white transition hover:bg-foreground"
+                className="inline-flex items-center justify-center rounded-full bg-[color:var(--verified)] px-5 py-2 text-[13px] font-semibold text-white transition hover:bg-[color:var(--verified-2)]"
                 onClick={handleSubmit}
                 type="button"
               >
                 Yes, submit
               </button>
               <button
-                className="text-sm text-(--muted) hover:text-foreground"
+                className="text-sm text-[color:var(--ink-3)] hover:text-[color:var(--ink)]"
                 onClick={() => setSubmitState("idle")}
                 type="button"
               >
@@ -428,7 +428,7 @@ export function RecommendationForm({ rec: initial }: Props) {
             </div>
           ) : (
             <button
-              className="h-9 rounded-xl bg-(--accent) px-4 text-sm font-semibold text-white transition hover:bg-foreground disabled:opacity-50"
+              className="inline-flex items-center justify-center rounded-full bg-[color:var(--verified)] px-5 py-2 text-[13px] font-semibold text-white transition hover:bg-[color:var(--verified-2)] disabled:opacity-50"
               disabled={submitState === "submitting"}
               onClick={() => setSubmitState("confirming")}
               type="button"

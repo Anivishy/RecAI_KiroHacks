@@ -10,6 +10,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@aws-sdk/client-bedrock-runtime": "^3.1041.0",
     "@aws-sdk/rds-signer": "^3.1041.0",
     "@pinecone-database/pinecone": "^7.2.0",
     "@vercel/functions": "^3.5.0",

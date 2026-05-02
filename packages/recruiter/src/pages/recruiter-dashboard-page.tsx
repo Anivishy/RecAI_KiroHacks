@@ -1,11 +1,11 @@
 import Link from "next/link";
-import { appRoutes } from "@recai/shared";
+import { Card, CardHead, Mono, appRoutes } from "@recai/shared";
 import { RecruiterShell } from "../components/recruiter-shell";
 import { requireRecruiterSession } from "../server/recruiter-auth";
 import { getJobPostingsForRecruiter, type RecruiterJobPosting } from "../server/recruiter-jobs";
 
 const fieldClass =
-  "h-10 rounded-xl border border-[color:var(--line)] bg-white/90 px-3 text-sm text-[var(--foreground)] outline-none transition placeholder:text-[var(--muted)] focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)]";
+  "h-10 rounded-[var(--r-md)] border border-[color:var(--hairline-2)] bg-[color:var(--surface)] px-3 text-[13px] text-[color:var(--ink)] outline-none transition placeholder:text-[color:var(--ink-4)] focus:border-[color:var(--verified)] focus:ring-[3px] focus:ring-[color:var(--verified-bg)]";
 
 function buildInviteUrl(inviteCode: string) {
   const base = process.env.VERCEL_PROJECT_PRODUCTION_URL
@@ -16,31 +16,30 @@ function buildInviteUrl(inviteCode: string) {
 
 function PostingRow({ posting }: { posting: RecruiterJobPosting }) {
   return (
-    <div className="group flex flex-wrap items-center gap-x-4 gap-y-3 border-b border-[color:var(--line)] px-5 py-4 last:border-0 hover:bg-white/40 transition">
-      <div className="min-w-0 flex-1">
-        <p className="truncate font-semibold text-[var(--foreground)]">{posting.title}</p>
-        <p className="mt-0.5 text-sm text-[var(--muted)]">
+    <div className="grid grid-cols-[56px_1fr_auto] items-start gap-4 border-b border-[color:var(--hairline)] px-5 py-4 transition last:border-0 hover:bg-[color:var(--surface-2)]">
+      <div className="flex h-12 w-12 items-center justify-center rounded-[var(--r-md)] bg-[color:var(--ink)] text-[14px] font-semibold text-white">
+        {posting.title[0]?.toUpperCase() ?? "·"}
+      </div>
+      <div className="min-w-0">
+        <p className="truncate text-[14px] font-semibold text-[color:var(--ink)]">{posting.title}</p>
+        <p className="mt-0.5 text-[12px] text-[color:var(--ink-3)]">
           {posting.location} · {posting.employmentType} · {posting.experienceLevel}
         </p>
-        <p className="mt-1 break-all font-mono text-xs text-[var(--muted)] opacity-70">
+        <Mono className="mt-1 block break-all text-[11px] text-[color:var(--ink-4)]">
           {buildInviteUrl(posting.inviteCode)}
-        </p>
+        </Mono>
       </div>
-
       <div className="flex shrink-0 items-center gap-3">
-        <span className="tabular-nums text-sm text-[var(--muted)]">
+        <span className="text-[13px] tabular-nums text-[color:var(--ink-2)]">
           {posting.candidateCount} {posting.candidateCount === 1 ? "candidate" : "candidates"}
         </span>
         <form action={`/api/recruiter/jobs/${posting.id}/delete`} method="post">
-          <button
-            className="text-sm text-[rgba(220,38,38,0.6)] transition hover:text-[rgb(220,38,38)]"
-            type="submit"
-          >
+          <button className="text-[12px] text-[#b91c1c]/70 transition hover:text-[#b91c1c]" type="submit">
             Delete
           </button>
         </form>
         <Link
-          className="rounded-lg border border-[color:var(--line)] bg-white px-3 py-1.5 text-sm font-semibold text-[var(--foreground)] transition hover:border-[var(--accent)] hover:text-[var(--accent)]"
+          className="rounded-[var(--r-md)] border border-[color:var(--hairline)] bg-[color:var(--surface)] px-3 py-1.5 text-[12px] font-semibold text-[color:var(--ink)] transition hover:border-[color:var(--ink-3)]"
           href={appRoutes.recruiterJob(posting.id)}
         >
           Open →
@@ -61,17 +60,8 @@ export async function RecruiterDashboardPage() {
       pageTitle="Dashboard"
       pageSubtitle={`${recruiter.title} · ${recruiter.email}`}
     >
-      {/* Postings panel */}
-      <div className="overflow-hidden rounded-2xl border border-[color:var(--line)] bg-white/70 shadow-sm backdrop-blur-sm">
-        <div className="flex items-center justify-between border-b border-[color:var(--line)] px-5 py-4">
-          <h2 className="font-semibold text-[var(--foreground)]">
-            Job Postings
-            <span className="ml-2 rounded-full bg-[color:var(--line)] px-2 py-0.5 text-xs font-medium text-[var(--muted)]">
-              {postings.length}
-            </span>
-          </h2>
-        </div>
-
+      <Card>
+        <CardHead eyebrow={`Job postings · ${postings.length}`} />
         {postings.length > 0 ? (
           <div>
             {postings.map((posting) => (
@@ -79,71 +69,53 @@ export async function RecruiterDashboardPage() {
             ))}
           </div>
         ) : (
-          <div className="px-5 py-10 text-center">
-            <p className="text-sm font-medium text-[var(--foreground)]">No job postings yet</p>
-            <p className="mt-1 text-sm text-[var(--muted)]">
+          <div className="px-6 py-10 text-center">
+            <p className="text-[14px] font-semibold text-[color:var(--ink)]">No job postings yet</p>
+            <p className="mt-1 text-[13px] text-[color:var(--ink-3)]">
               Add your first listing below to get a candidate join link.
             </p>
           </div>
         )}
-      </div>
+      </Card>
 
-      {/* Add posting form */}
-      <div className="overflow-hidden rounded-2xl border border-[color:var(--line)] bg-white/70 shadow-sm backdrop-blur-sm">
-        <div className="border-b border-[color:var(--line)] px-5 py-4">
-          <h2 className="font-semibold text-[var(--foreground)]">Add Posting</h2>
-        </div>
-        <form action="/api/recruiter/jobs" className="flex flex-wrap items-end gap-3 p-5" method="post">
-          <div className="min-w-[200px] flex-[2]">
-            <label className="mb-1 block text-xs font-medium text-[var(--muted)]">Job title *</label>
-            <input
-              className={fieldClass + " w-full"}
-              name="title"
-              placeholder="Senior Software Engineer"
-              required
-              type="text"
-            />
-          </div>
-          <div className="min-w-[130px] flex-1">
-            <label className="mb-1 block text-xs font-medium text-[var(--muted)]">Location</label>
-            <input
-              className={fieldClass + " w-full"}
-              defaultValue="Remote"
-              name="location"
-              placeholder="Remote"
-              type="text"
-            />
-          </div>
-          <div className="min-w-[130px] flex-1">
-            <label className="mb-1 block text-xs font-medium text-[var(--muted)]">Type</label>
-            <select className={fieldClass + " w-full"} name="employmentType">
+      <Card>
+        <CardHead eyebrow="Add posting" />
+        <form action="/api/recruiter/jobs" className="grid gap-3 px-5 py-4 sm:grid-cols-[2fr_1fr_1fr_1fr_auto]" method="post">
+          <label className="text-[12px] font-semibold text-[color:var(--ink)]">
+            Job title *
+            <input className={fieldClass + " mt-1 w-full"} name="title" placeholder="Senior Software Engineer" required type="text" />
+          </label>
+          <label className="text-[12px] font-semibold text-[color:var(--ink)]">
+            Location
+            <input className={fieldClass + " mt-1 w-full"} defaultValue="Remote" name="location" placeholder="Remote" type="text" />
+          </label>
+          <label className="text-[12px] font-semibold text-[color:var(--ink)]">
+            Type
+            <select className={fieldClass + " mt-1 w-full"} name="employmentType">
               <option value="Full-time">Full-time</option>
               <option value="Part-time">Part-time</option>
               <option value="Contract">Contract</option>
               <option value="Internship">Internship</option>
             </select>
-          </div>
-          <div className="min-w-[130px] flex-1">
-            <label className="mb-1 block text-xs font-medium text-[var(--muted)]">Level</label>
-            <select className={fieldClass + " w-full"} name="experienceLevel">
+          </label>
+          <label className="text-[12px] font-semibold text-[color:var(--ink)]">
+            Level
+            <select className={fieldClass + " mt-1 w-full"} name="experienceLevel">
               <option value="Entry-level">Entry-level</option>
               <option value="Mid-level">Mid-level</option>
               <option value="Senior">Senior</option>
               <option value="Staff">Staff</option>
               <option value="Principal">Principal</option>
             </select>
-          </div>
-          <div className="shrink-0">
-            <button
-              className="h-10 rounded-xl bg-[var(--accent)] px-5 text-sm font-semibold transition hover:bg-[var(--foreground)]"
-              style={{ color: "white" }}
-              type="submit"
-            >
-              Add posting
-            </button>
-          </div>
+          </label>
+          <button
+            className="h-10 self-end rounded-[var(--r-md)] bg-[color:var(--verified)] px-5 text-[13px] font-semibold text-white transition hover:bg-[color:var(--verified-2)]"
+            type="submit"
+          >
+            Add posting
+          </button>
         </form>
-      </div>
+      </Card>
     </RecruiterShell>
   );
 }

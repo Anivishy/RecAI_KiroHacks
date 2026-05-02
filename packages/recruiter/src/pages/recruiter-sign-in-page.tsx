@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { AppShell, SectionCard, appRoutes } from "@recai/shared";
+import { Card, CardHead, CardPad, TopNav, appRoutes } from "@recai/shared";
 import {
   getRecruiterSession,
   isRecruiterDatabaseConfigured,
@@ -32,181 +32,116 @@ function readSearchParam(value?: string | string[]) {
   return Array.isArray(value) ? value[0] : value;
 }
 
-const inputClassName =
-  "mt-2 w-full rounded-[18px] border border-[color:var(--line)] bg-white px-4 py-3 text-sm text-[var(--foreground)] outline-none transition placeholder:text-[var(--muted)] focus:border-[var(--accent)]";
+const inputClass =
+  "mt-1 w-full rounded-[var(--r-md)] border border-[color:var(--hairline-2)] bg-[color:var(--surface)] px-3 py-2 text-[13px] text-[color:var(--ink)] outline-none transition placeholder:text-[color:var(--ink-4)] focus:border-[color:var(--verified)] focus:ring-[3px] focus:ring-[color:var(--verified-bg)]";
 
-export async function RecruiterSignInPage({
-  searchParams,
-}: RecruiterSignInPageProps) {
+export async function RecruiterSignInPage({ searchParams }: RecruiterSignInPageProps) {
   if (isRecruiterDatabaseConfigured()) {
-    const existingSession = await getRecruiterSession();
-
-    if (existingSession) {
-      redirect(appRoutes.recruiterDashboard);
-    }
+    const existing = await getRecruiterSession();
+    if (existing) redirect(appRoutes.recruiterDashboard);
   }
-
-  const resolvedSearchParams = await searchParams;
-  const errorCode = readSearchParam(resolvedSearchParams.error);
-  const noticeCode = readSearchParam(resolvedSearchParams.notice);
-  const errorMessage = errorCode ? errorMessages[errorCode] : null;
-  const noticeMessage = noticeCode ? noticeMessages[noticeCode] : null;
+  const resolved = await searchParams;
+  const errorMessage = readSearchParam(resolved.error)
+    ? errorMessages[readSearchParam(resolved.error)!]
+    : null;
+  const noticeMessage = readSearchParam(resolved.notice)
+    ? noticeMessages[readSearchParam(resolved.notice)!]
+    : null;
 
   return (
-    <AppShell
-      eyebrow="Recruiter Entry"
-      title="Create a recruiter account and start evaluating candidates through validated signals."
-      description="Create a recruiter account, open your job posting workspace, and review candidates through validated recommendation evidence."
-      actions={
-        <Link
-          className="rounded-full border border-[color:var(--line)] bg-white/70 px-4 py-2 text-sm font-semibold text-[var(--foreground)] transition hover:border-[var(--accent)] hover:text-[var(--accent)]"
-          href={appRoutes.home}
-        >
-          Back to landing
-        </Link>
-      }
-    >
-      <div className="grid gap-4">
-        {errorMessage ? (
-          <div className="rounded-[24px] border border-[rgba(220,38,38,0.22)] bg-[rgba(220,38,38,0.08)] px-5 py-4 text-sm leading-6 text-[var(--foreground)]">
-            {errorMessage}
+    <>
+      <TopNav viewer={{ role: "guest" }} showSearch={false} />
+      <main className="mx-auto flex w-full max-w-[1240px] flex-1 flex-col gap-6 px-6 py-7 pb-16 sm:px-8">
+        <header className="flex flex-wrap items-start justify-between gap-4">
+          <div>
+            <p className="text-[12px] font-semibold uppercase tracking-[0.12em] text-[color:var(--ink-3)]">Recruiter entry</p>
+            <h1 className="mt-1 max-w-2xl text-[30px] font-semibold tracking-[-0.02em] text-[color:var(--ink)]">
+              Evaluate candidates through validated recommendation evidence.
+            </h1>
           </div>
-        ) : null}
+          <Link
+            className="rounded-full border border-[color:var(--hairline)] bg-[color:var(--surface)] px-4 py-2 text-[13px] font-semibold text-[color:var(--ink)] transition hover:border-[color:var(--ink-3)]"
+            href={appRoutes.home}
+          >
+            Back to landing
+          </Link>
+        </header>
 
-        {noticeMessage ? (
-          <div className="rounded-[24px] border border-[rgba(15,118,110,0.24)] bg-[rgba(15,118,110,0.10)] px-5 py-4 text-sm leading-6 text-[var(--foreground)]">
-            {noticeMessage}
-          </div>
-        ) : null}
-      </div>
-
-      <div className="grid gap-6 lg:grid-cols-[1.02fr_0.98fr]">
-        <SectionCard
-          eyebrow="Create Account"
-          title="Open recruiter signup"
-          description="Create a recruiter account so you can manage job postings and evaluate candidates through validated experience signals."
-        >
-          <form action="/api/recruiter/auth/sign-up" className="grid gap-4" method="post">
-            <div className="grid gap-4 md:grid-cols-2">
-              <label className="text-sm font-semibold text-[var(--foreground)]">
-                Full name
-                <input
-                  autoComplete="name"
-                  className={inputClassName}
-                  name="fullName"
-                  placeholder="Jordan Ellis"
-                  required
-                  type="text"
-                />
-              </label>
-              <label className="text-sm font-semibold text-[var(--foreground)]">
-                Work email
-                <input
-                  autoComplete="email"
-                  className={inputClassName}
-                  name="email"
-                  placeholder="jordan@company.com"
-                  required
-                  type="email"
-                />
-              </label>
+        <div className="grid gap-3">
+          {errorMessage ? (
+            <div className="rounded-[var(--r-lg)] border border-[#fecaca] bg-[#fef2f2] px-5 py-3 text-[13px] text-[#b91c1c]">
+              {errorMessage}
             </div>
-
-            <div className="grid gap-4 md:grid-cols-2">
-              <label className="text-sm font-semibold text-[var(--foreground)]">
-                Company
-                <input
-                  autoComplete="organization"
-                  className={inputClassName}
-                  name="company"
-                  placeholder="Northstar Systems"
-                  required
-                  type="text"
-                />
-              </label>
-              <label className="text-sm font-semibold text-[var(--foreground)]">
-                Title
-                <input
-                  autoComplete="organization-title"
-                  className={inputClassName}
-                  name="title"
-                  placeholder="Lead Technical Recruiter"
-                  required
-                  type="text"
-                />
-              </label>
+          ) : null}
+          {noticeMessage ? (
+            <div className="rounded-[var(--r-lg)] border border-[color:var(--verified-bg-2)] bg-[color:var(--verified-bg)] px-5 py-3 text-[13px] text-[color:var(--ink)]">
+              {noticeMessage}
             </div>
+          ) : null}
+        </div>
 
-            <label className="text-sm font-semibold text-[var(--foreground)]">
-              Password
-              <input
-                autoComplete="new-password"
-                className={inputClassName}
-                minLength={8}
-                name="password"
-                placeholder="At least 8 characters"
-                required
-                type="password"
-              />
-            </label>
+        <div className="grid gap-6 lg:grid-cols-2">
+          <Card>
+            <CardHead eyebrow="Create account" />
+            <CardPad>
+              <form action="/api/recruiter/auth/sign-up" className="grid gap-3" method="post">
+                <div className="grid gap-3 md:grid-cols-2">
+                  <label className="text-[12px] font-semibold text-[color:var(--ink)]">
+                    Full name
+                    <input autoComplete="name" className={inputClass} name="fullName" placeholder="Jordan Ellis" required type="text" />
+                  </label>
+                  <label className="text-[12px] font-semibold text-[color:var(--ink)]">
+                    Work email
+                    <input autoComplete="email" className={inputClass} name="email" placeholder="jordan@company.com" required type="email" />
+                  </label>
+                </div>
+                <div className="grid gap-3 md:grid-cols-2">
+                  <label className="text-[12px] font-semibold text-[color:var(--ink)]">
+                    Company
+                    <input autoComplete="organization" className={inputClass} name="company" placeholder="Northstar Systems" required type="text" />
+                  </label>
+                  <label className="text-[12px] font-semibold text-[color:var(--ink)]">
+                    Title
+                    <input autoComplete="organization-title" className={inputClass} name="title" placeholder="Lead Technical Recruiter" required type="text" />
+                  </label>
+                </div>
+                <label className="text-[12px] font-semibold text-[color:var(--ink)]">
+                  Password
+                  <input autoComplete="new-password" className={inputClass} minLength={8} name="password" placeholder="At least 8 characters" required type="password" />
+                </label>
+                <button
+                  className="mt-1 inline-flex items-center justify-center rounded-full bg-[color:var(--ink)] px-5 py-2 text-[13px] font-semibold text-white transition hover:bg-[color:var(--verified-2)]"
+                  type="submit"
+                >
+                  Create recruiter account
+                </button>
+              </form>
+            </CardPad>
+          </Card>
 
-            <button
-              className="rounded-full bg-[var(--foreground)] px-5 py-3 text-sm font-semibold transition hover:bg-(--accent-strong)"
-              style={{ color: "white" }}
-              type="submit"
-            >
-              Create recruiter account
-            </button>
-          </form>
-        </SectionCard>
-
-        <SectionCard
-          eyebrow="Sign In"
-          title="Return to the recruiter portal"
-          description="Existing recruiter accounts sign in here and return to their recruiter workspace."
-        >
-          <form action="/api/recruiter/auth/sign-in" className="grid gap-4" method="post">
-            <label className="text-sm font-semibold text-[var(--foreground)]">
-              Work email
-              <input
-                autoComplete="email"
-                className={inputClassName}
-                name="email"
-                placeholder="jordan@company.com"
-                required
-                type="email"
-              />
-            </label>
-
-            <label className="text-sm font-semibold text-[var(--foreground)]">
-              Password
-              <input
-                autoComplete="current-password"
-                className={inputClassName}
-                name="password"
-                placeholder="Enter your password"
-                required
-                type="password"
-              />
-            </label>
-
-            <button
-              className="rounded-full bg-[var(--accent)] px-5 py-3 text-sm font-semibold transition hover:bg-[var(--foreground)]"
-              style={{ color: "white" }}
-              type="submit"
-            >
-              Sign in to recruiter portal
-            </button>
-          </form>
-
-          <div className="mt-5 rounded-[24px] border border-[color:var(--line)] bg-[rgba(15,118,110,0.08)] p-5">
-            <p className="text-sm leading-6 text-[var(--muted)]">
-              Recruiter accounts are designed around posting-specific talent pools,
-              evidence-backed search, and fast access to candidate review pages.
-            </p>
-          </div>
-        </SectionCard>
-      </div>
-    </AppShell>
+          <Card>
+            <CardHead eyebrow="Sign in" />
+            <CardPad>
+              <form action="/api/recruiter/auth/sign-in" className="grid gap-3" method="post">
+                <label className="text-[12px] font-semibold text-[color:var(--ink)]">
+                  Work email
+                  <input autoComplete="email" className={inputClass} name="email" placeholder="jordan@company.com" required type="email" />
+                </label>
+                <label className="text-[12px] font-semibold text-[color:var(--ink)]">
+                  Password
+                  <input autoComplete="current-password" className={inputClass} name="password" placeholder="Enter your password" required type="password" />
+                </label>
+                <button
+                  className="mt-1 inline-flex items-center justify-center rounded-full bg-[color:var(--verified)] px-5 py-2 text-[13px] font-semibold text-white transition hover:bg-[color:var(--verified-2)]"
+                  type="submit"
+                >
+                  Sign in
+                </button>
+              </form>
+            </CardPad>
+          </Card>
+        </div>
+      </main>
+    </>
   );
 }
