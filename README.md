@@ -22,21 +22,50 @@ This repo currently contains the shared project scaffold and the first web exper
 
 ## Quick Start
 
-1. Install the web app dependencies:
+1. Install the web app dependencies.
+
+   **macOS / Linux:**
+
+   ```bash
+   npm install
+   ```
+
+   **Windows (PowerShell or CMD):**
+
+   ```powershell
+   npm.cmd install
+   ```
+
+   If your PowerShell execution policy allows `npm install`, the plain form works there too. The `npm.cmd` form is the safest default on Windows.
+
+2. Start the app.
+
+   **macOS / Linux:**
+
+   ```bash
+   npm run dev
+   ```
+
+   **Windows:**
+
+   ```powershell
+   npm.cmd run dev
+   ```
+
+3. Open `http://localhost:3000`.
+
+### Cross-platform native binaries
+
+`apps/web` declares optional dependencies for the platform-specific native binaries used by Tailwind v4 (`@tailwindcss/oxide-*`) and `lightningcss-*`, covering macOS (Apple Silicon and Intel), Windows x64, and Linux x64. npm picks the one that matches the machine running `npm install`, so collaborators on different operating systems should not need any manual setup.
+
+If you hit `Cannot find module 'lightningcss.<platform>.node'` or a similar `@tailwindcss/oxide` error after a clone, your lockfile got into a bad state for your platform. Recover with:
 
 ```bash
-npm.cmd install
+rm -rf node_modules apps/web/node_modules package-lock.json
+npm install
 ```
 
-2. Start the app:
-
-```bash
-npm.cmd run dev
-```
-
-3. Open `http://localhost:3000`
-
-If your PowerShell execution policy allows `npm run ...`, that works too. The `npm.cmd` form is the safest default on Windows.
+Do not commit the regenerated `package-lock.json` from that recovery unless you are intentionally bumping the lockfile for the team.
 
 ## Working Agreement
 

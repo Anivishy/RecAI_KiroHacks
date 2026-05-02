@@ -1,159 +1,101 @@
-import Link from "next/link";
 import { notFound } from "next/navigation";
-import {
-  AppShell,
-  SectionCard,
-  appRoutes,
-  pentagonTraitMeta,
-  sampleCandidateProfiles,
-  sampleJobPosting,
-} from "@recai/shared";
-import { RecruiterSignOutForm } from "../components/recruiter-sign-out-form";
+import { appRoutes } from "@recai/shared";
+import { RecruiterShell } from "../components/recruiter-shell";
+import { CandidateSearch } from "../components/candidate-search";
 import { requireRecruiterSession } from "../server/recruiter-auth";
+import { getJobPostingById } from "../server/recruiter-jobs";
 
 type RecruiterJobPostingPageProps = {
-  params: Promise<{
-    jobId: string;
-  }>;
+  params: Promise<{ jobId: string }>;
 };
 
-export async function RecruiterJobPostingPage({
-  params,
-}: RecruiterJobPostingPageProps) {
+function buildInviteUrl(inviteCode: string) {
+  const base = process.env.VERCEL_PROJECT_PRODUCTION_URL
+    ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`
+    : "https://recai-sigma.vercel.app";
+  return `${base}/candidate/sign-in?join=${inviteCode}`;
+}
+
+export async function RecruiterJobPostingPage({ params }: RecruiterJobPostingPageProps) {
   const recruiter = await requireRecruiterSession();
   const { jobId } = await params;
 
-  if (jobId !== sampleJobPosting.id) {
-    notFound();
-  }
+  const posting = await getJobPostingById(jobId, recruiter.id);
+  if (!posting) notFound();
+
+  const inviteUrl = buildInviteUrl(posting.inviteCode);
 
   return (
-    <AppShell
-      eyebrow="Recruiter Job Posting"
-      title={sampleJobPosting.title}
-      description={`Posting-scoped recruiter workspace for ${recruiter.fullName}. Narrow the pool with structured filters, evidence thresholds, and natural-language search.`}
-      breadcrumbs={[
-        { label: "Home", href: appRoutes.home },
-        { label: "Recruiter dashboard", href: appRoutes.recruiterDashboard },
-        { label: sampleJobPosting.title },
-      ]}
-      actions={
-        <>
-          <Link
-            className="rounded-full bg-[var(--foreground)] px-4 py-2 text-sm font-semibold text-white transition hover:bg-[var(--accent-strong)]"
-            href={appRoutes.recruiterDashboard}
-          >
-            Back to dashboard
-          </Link>
-          <RecruiterSignOutForm />
-        </>
-      }
+    <RecruiterShell
+      recruiterName={recruiter.fullName}
+      recruiterCompany={recruiter.company}
+      pageTitle={posting.title}
+      pageSubtitle={`${posting.location} · ${posting.employmentType} · ${posting.experienceLevel}`}
+      backHref={appRoutes.recruiterDashboard}
+      backLabel="Dashboard"
     >
-      <div className="grid gap-6 xl:grid-cols-[0.95fr_1.05fr]">
-        <SectionCard
-          eyebrow="Structured Filters"
-          title="Posting-scoped qualification controls"
-          description="Structured filters narrow the candidate pool before or alongside natural-language search."
-        >
-          <div className="grid gap-4">
-            <div className="rounded-[24px] border border-[color:var(--line)] bg-white/75 p-5">
-              <p className="text-sm uppercase tracking-[0.22em] text-[var(--muted)]">
-                Role focus
-              </p>
-              <p className="mt-3 text-sm leading-6 text-[var(--muted)]">
-                Platform engineering, backend systems, Python services, distributed
-                systems
-              </p>
-            </div>
-            <div className="rounded-[24px] border border-[color:var(--line)] bg-white/75 p-5">
-              <p className="text-sm uppercase tracking-[0.22em] text-[var(--muted)]">
-                Experience range
-              </p>
-              <p className="mt-3 text-sm leading-6 text-[var(--muted)]">
-                4-8 years, production backend ownership, shipped cross-functional work
-              </p>
-            </div>
-            <div className="rounded-[24px] border border-[color:var(--line)] bg-white/75 p-5">
-              <p className="text-sm uppercase tracking-[0.22em] text-[var(--muted)]">
-                Search pentagon minimums
-              </p>
-              <div className="mt-4 grid gap-3 sm:grid-cols-2">
-                {pentagonTraitMeta.map((trait) => (
-                  <div
-                    key={trait.id}
-                    className="rounded-[18px] border border-[color:var(--line)] bg-[rgba(21,94,239,0.05)] px-4 py-3"
-                  >
-                    <p className="text-sm font-semibold text-[var(--foreground)]">
-                      {trait.label}
-                    </p>
-                    <p className="mt-1 text-sm text-[var(--muted)]">Minimum: 4 / 5</p>
-                  </div>
-                ))}
+      <div className="grid gap-6 lg:grid-cols-[1fr_1.2fr]">
+        {/* Posting details */}
+        <div className="overflow-hidden rounded-2xl border border-[color:var(--line)] bg-white/70 shadow-sm backdrop-blur-sm">
+          <div className="border-b border-[color:var(--line)] px-5 py-4">
+            <h2 className="font-semibold text-[var(--foreground)]">Posting Details</h2>
+          </div>
+          <div className="divide-y divide-[color:var(--line)]">
+            {[
+              { label: "Location", value: posting.location },
+              { label: "Employment type", value: posting.employmentType },
+              { label: "Experience level", value: posting.experienceLevel },
+            ].map(({ label, value }) => (
+              <div className="flex items-center justify-between px-5 py-3.5" key={label}>
+                <span className="text-sm text-[var(--muted)]">{label}</span>
+                <span className="text-sm font-medium text-[var(--foreground)]">{value}</span>
               </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Join link */}
+        <div className="overflow-hidden rounded-2xl border border-[color:var(--line)] bg-white/70 shadow-sm backdrop-blur-sm">
+          <div className="border-b border-[color:var(--line)] px-5 py-4">
+            <h2 className="font-semibold text-[var(--foreground)]">Candidate Join Link</h2>
+          </div>
+          <div className="p-5">
+            <p className="text-sm text-[var(--muted)]">
+              Share this URL with candidates. Anyone who visits and signs in will be added to this posting's pool.
+            </p>
+            <div className="mt-3 rounded-xl border border-[color:var(--line)] bg-[rgba(15,118,110,0.05)] px-4 py-3">
+              <p className="break-all font-mono text-sm text-[var(--foreground)]">{inviteUrl}</p>
+            </div>
+            <div className="mt-4 flex items-center gap-3 border-t border-[color:var(--line)] pt-4">
+              <span className="text-2xl font-semibold tabular-nums text-[var(--foreground)]">
+                {posting.candidateCount}
+              </span>
+              <span className="text-sm text-[var(--muted)]">
+                {posting.candidateCount === 1 ? "candidate has" : "candidates have"} joined
+              </span>
             </div>
           </div>
-        </SectionCard>
-
-        <SectionCard
-          eyebrow="Natural-Language Search"
-          title="Describe the candidate you want"
-          description="Search in plain language when you want a combination of technical and behavioral proof, not just exact keyword matches."
-        >
-          <div className="rounded-[24px] border border-[color:var(--line)] bg-[rgba(15,118,110,0.08)] p-5">
-            <p className="text-sm uppercase tracking-[0.22em] text-[var(--muted)]">
-              Example query
-            </p>
-            <p className="mt-3 text-base leading-7 text-[var(--foreground)]">
-              "Show me candidates in this pool with strong Python systems experience who
-              also demonstrated ownership and leadership on shipped projects."
-            </p>
-          </div>
-          <div className="mt-4 rounded-[24px] border border-[color:var(--line)] bg-white/75 p-5">
-            <p className="text-sm uppercase tracking-[0.22em] text-[var(--muted)]">
-              Result destination
-            </p>
-            <p className="mt-3 text-sm leading-6 text-[var(--muted)]">
-              Search results return candidate cards ranked by relevance. Clicking a card
-              opens the candidate review page with job-specific evidence.
-            </p>
-          </div>
-        </SectionCard>
+        </div>
       </div>
 
-      <SectionCard
-        eyebrow="Candidate Pool"
-        title={`Candidates for ${sampleJobPosting.title}`}
-        description="These cards represent the results a recruiter reviews inside this posting."
-      >
-        <div className="grid gap-4">
-          {sampleCandidateProfiles.map((candidate) => (
-            <div
-              key={candidate.slug}
-              className="rounded-[24px] border border-[color:var(--line)] bg-white/75 p-5"
-            >
-              <div className="flex flex-wrap items-start justify-between gap-4">
-                <div>
-                  <h3 className="text-xl font-semibold text-[var(--foreground)]">
-                    {candidate.fullName}
-                  </h3>
-                  <p className="mt-1 text-sm text-[var(--muted)]">
-                    {candidate.currentRole} - {candidate.yearsExperience} years
-                  </p>
-                </div>
-                <Link
-                  className="text-sm font-semibold text-[var(--accent-strong)] hover:text-[var(--accent)]"
-                  href={appRoutes.recruiterCandidateProfile(jobId, candidate.slug)}
-                >
-                  View recruiter profile
-                </Link>
-              </div>
-              <p className="mt-4 text-sm leading-6 text-[var(--muted)]">
-                {candidate.bio}
-              </p>
-            </div>
-          ))}
+      {/* Candidate pool + AI search */}
+      <div className="overflow-hidden rounded-2xl border border-[color:var(--line)] bg-white/70 shadow-sm backdrop-blur-sm">
+        <div className="flex items-center justify-between border-b border-[color:var(--line)] px-5 py-4">
+          <h2 className="font-semibold text-[var(--foreground)]">
+            Candidate Pool
+            <span className="ml-2 rounded-full bg-[color:var(--line)] px-2 py-0.5 text-xs font-medium text-[var(--muted)]">
+              {posting.candidateCount}
+            </span>
+          </h2>
+          <span className="rounded-full bg-[rgba(15,118,110,0.08)] px-2.5 py-0.5 text-xs font-medium text-(--accent)">
+            AI search
+          </span>
         </div>
-      </SectionCard>
-    </AppShell>
+
+        <div className="p-5">
+          <CandidateSearch jobId={posting.id} />
+        </div>
+      </div>
+    </RecruiterShell>
   );
 }

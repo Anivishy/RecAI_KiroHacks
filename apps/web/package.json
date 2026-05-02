@@ -11,6 +11,7 @@
   },
   "dependencies": {
     "@aws-sdk/rds-signer": "^3.1041.0",
+    "@pinecone-database/pinecone": "^7.2.0",
     "@vercel/functions": "^3.5.0",
     "next": "16.2.4",
     "pg": "^8.20.0",
@@ -29,6 +30,13 @@
     "typescript": "^5"
   },
   "optionalDependencies": {
-    "@tailwindcss/oxide-linux-x64-gnu": "4.2.4"
+    "@tailwindcss/oxide-darwin-arm64": "4.2.4",
+    "@tailwindcss/oxide-darwin-x64": "4.2.4",
+    "@tailwindcss/oxide-linux-x64-gnu": "4.2.4",
+    "@tailwindcss/oxide-win32-x64-msvc": "4.2.4",
+    "lightningcss-darwin-arm64": "1.32.0",
+    "lightningcss-darwin-x64": "1.32.0",
+    "lightningcss-linux-x64-gnu": "1.32.0",
+    "lightningcss-win32-x64-msvc": "1.32.0"
   }
 }
