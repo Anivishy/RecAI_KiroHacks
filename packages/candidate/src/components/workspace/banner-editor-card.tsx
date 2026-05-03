@@ -25,7 +25,7 @@ export function BannerEditorCard({ banner, status }: BannerEditorCardProps) {
       />
       <CardPad>
         <p className="text-[12px] leading-5 text-[color:var(--ink-3)]">
-          Public-facing contact links. <span className="mono text-[11px] text-[color:var(--ink-4)]">// not indexed</span>
+          Public-facing contact links. <span className="mono text-[11px] text-[color:var(--ink-4)]">Not indexed</span>
         </p>
         <form action="/api/candidate/profile/banner" className="mt-4 grid gap-3" method="post">
           <label className="text-[12px] font-semibold text-[color:var(--ink)]">

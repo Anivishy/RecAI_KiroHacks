@@ -24,17 +24,14 @@ export function TrustCard({ stats }: { stats: TrustStats }) {
         </p>
         <div className="mt-4 grid gap-2 text-[13px] leading-5 text-white/85">
           <div className="flex items-center gap-2">
-            <span style={{ color: "#6FE1B4" }}><Icons.Check size={14} /></span>
             <span>
               {stats.managerRecs} manager · {stats.peerRecs} peer · {Math.max(0, stats.totalRecs - stats.managerRecs - stats.peerRecs)} other
             </span>
           </div>
           <div className="flex items-center gap-2">
-            <span style={{ color: "#6FE1B4" }}><Icons.Check size={14} /></span>
             <span>Each domain confirmed against verified-company directory</span>
           </div>
           <div className="flex items-center gap-2">
-            <span style={{ color: "#6FE1B4" }}><Icons.Check size={14} /></span>
             <span>No candidate-authored content surfaces in scoring</span>
           </div>
         </div>

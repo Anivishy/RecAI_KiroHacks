@@ -11,7 +11,6 @@ import {
   buildExperienceRows,
   buildRelationMix,
   buildTrustStats,
-  pentagonTraitMeta,
   type CandidateProfile,
 } from "@recai/shared";
 import { ExperienceList } from "@recai/candidate/components/profile/experience-list";
@@ -39,20 +38,6 @@ function getInitials(fullName: string): string {
   return `${first}${last}`.toUpperCase();
 }
 
-function getStatsFromCandidate(candidate: CandidateProfile) {
-  const traits = pentagonTraitMeta;
-  const traitCount: number = traits.length;
-  const totalScore = traits.reduce((sum, trait) => sum + candidate.pentagonScores[trait.id], 0);
-  const avg = traitCount === 0 ? 0 : Math.round((totalScore / traitCount) * 20);
-  const top = traits
-    .map((trait) => ({
-      label: trait.label,
-      score: Math.round(candidate.pentagonScores[trait.id] * 20),
-    }))
-    .sort((a, b) => b.score - a.score)[0] ?? { label: "—", score: 0 };
-  return { avgTraitScore: avg, topTraitLabel: top.label, topTraitScore: top.score };
-}
-
 export async function RecruiterCandidateProfilePage({
   params,
 }: RecruiterCandidateProfilePageProps) {
@@ -72,7 +57,6 @@ export async function RecruiterCandidateProfilePage({
   const experienceRows = buildExperienceRows(candidate, candidate.recommendations);
   const trustStats = buildTrustStats(candidate.recommendations);
   const relationMix = buildRelationMix(candidate.recommendations);
-  const stats = getStatsFromCandidate(candidate);
 
   return (
     <>
@@ -97,8 +81,8 @@ export async function RecruiterCandidateProfilePage({
             joinedLabel={`${candidate.yearsExperience}+ yrs experience`}
             contactLinks={[]}
           />
-          <Suspense fallback={<RecruiterAISummarySkeleton stats={stats} />}>
-            <RecruiterAISummaryLoader candidate={candidate} stats={stats} />
+          <Suspense fallback={<RecruiterAISummarySkeleton />}>
+            <RecruiterAISummaryLoader candidate={candidate} />
           </Suspense>
           <ExperienceList rows={experienceRows} recommendations={candidate.recommendations} />
         </div>

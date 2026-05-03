@@ -70,7 +70,7 @@ export function RecruiterAISummary({ summary, stats }: RecruiterAISummaryProps) 
           <Mono>· {summary.recCount} recs in corpus</Mono>
           <Mono>· model: {summary.model}</Mono>
           {isFallback ? (
-            <Mono className="text-[color:var(--ink-4)]">// generated locally · bedrock unreachable</Mono>
+            <Mono className="text-[color:var(--ink-4)]">generated locally · bedrock unreachable</Mono>
           ) : null}
         </div>
       </div>

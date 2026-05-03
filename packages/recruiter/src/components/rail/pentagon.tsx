@@ -218,7 +218,7 @@ export function Pentagon({ traits, label }: PentagonProps) {
           </div>
         ) : (
           <Mono className="text-[12px] text-[color:var(--ink-4)]">
-            // hover to preview · click to pin
+            Hover to preview · click to pin
           </Mono>
         )}
       </div>
