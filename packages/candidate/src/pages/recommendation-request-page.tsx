@@ -51,7 +51,6 @@ export async function RecommendationRequestPage({ params }: Props) {
 
           <RecommendationRequestClient rec={rec} initialOtpPending={otpPending} />
         </main>
-      </div>
-    </div>
+    </>
   );
 }

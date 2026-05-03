@@ -361,7 +361,7 @@ export type DeletedRecommendationInfo = {
   candidateSlug: string | null;
 };
 
-export async function deleteRecommendation(token: string): Promise<boolean> {
+export async function deleteRecommendation(token: string): Promise<DeletedRecommendationInfo | null> {
   await ensureRecommendationSchema();
   const result = await query<Pick<RecommendationRow, "candidate_id" | "candidate_slug">>(
     `UPDATE recommendation_requests
@@ -370,7 +370,7 @@ export async function deleteRecommendation(token: string): Promise<boolean> {
       RETURNING candidate_id, candidate_slug`,
     [token],
   );
-  if ((result.rowCount ?? 0) === 0) return false;
+  if ((result.rowCount ?? 0) === 0) return null;
   const row = result.rows[0];
   return { candidateId: row?.candidate_id ?? null, candidateSlug: row?.candidate_slug ?? null };
 }
