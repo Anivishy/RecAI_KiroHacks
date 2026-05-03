@@ -110,14 +110,14 @@ export function RecommenderVerificationGate({
   if (stage === "company_pending") {
     return (
       <div className="rounded-2xl border border-amber-200 bg-amber-50/70 p-5 text-sm space-y-3">
-        <div className="font-medium text-foreground">Couldn't verify the company</div>
-        <div className="text-(--muted)">
+        <div className="font-medium text-[color:var(--ink)]">Couldn't verify the company</div>
+        <div className="text-[color:var(--ink-3)]">
           We sent the code, but couldn't verify a company at{" "}
           <strong>{lastDomain ?? "that domain"}</strong>. Please try a different work email.
         </div>
         <button
           type="button"
-          className="rounded-lg border border-(--line) bg-white px-3 py-1.5 text-xs font-medium hover:border-(--accent) hover:text-(--accent)"
+          className="rounded-lg border border-[color:var(--hairline)] bg-white px-3 py-1.5 text-xs font-medium hover:border-[color:var(--verified)] hover:text-[color:var(--verified)]"
           onClick={resetToEmail}
         >
           Use a different email
@@ -130,10 +130,10 @@ export function RecommenderVerificationGate({
     return (
       <form
         onSubmit={handleVerify}
-        className="rounded-2xl border border-(--line) bg-white/70 shadow-sm backdrop-blur-sm p-5 text-sm space-y-3"
+        className="rounded-2xl border border-[color:var(--hairline)] bg-white/70 shadow-sm backdrop-blur-sm p-5 text-sm space-y-3"
       >
-        <div className="font-medium text-foreground">Enter your verification code</div>
-        <div className="text-(--muted)">
+        <div className="font-medium text-[color:var(--ink)]">Enter your verification code</div>
+        <div className="text-[color:var(--ink-3)]">
           We sent a 6-digit code to your work email. The code expires in 10 minutes.
         </div>
         <input
@@ -143,7 +143,7 @@ export function RecommenderVerificationGate({
           maxLength={6}
           value={code}
           onChange={(ev) => setCode(ev.target.value.replace(/\D/g, "").slice(0, 6))}
-          className="w-full rounded-xl border border-(--line) bg-white/90 px-3 py-2.5 font-mono text-base tracking-[0.4em] outline-none focus:border-(--accent) focus:ring-1 focus:ring-(--accent)"
+          className="w-full rounded-xl border border-[color:var(--hairline)] bg-white/90 px-3 py-2.5 font-mono text-base tracking-[0.4em] outline-none focus:border-[color:var(--verified)] focus:ring-1 focus:ring-[color:var(--verified)]"
           placeholder="123456"
           required
         />
@@ -152,14 +152,14 @@ export function RecommenderVerificationGate({
           <button
             type="submit"
             disabled={submitting || code.length !== 6}
-            className="h-9 rounded-xl bg-(--accent) px-4 text-sm font-semibold text-white transition hover:bg-foreground disabled:opacity-50"
+            className="h-9 rounded-xl bg-[color:var(--verified)] px-4 text-sm font-semibold text-white transition hover:bg-[color:var(--ink)] disabled:opacity-50"
           >
             {submitting ? "Verifying…" : "Verify"}
           </button>
           <button
             type="button"
             onClick={resetToEmail}
-            className="h-9 rounded-xl border border-(--line) bg-white px-4 text-sm font-medium text-(--muted) transition hover:border-(--accent) hover:text-(--accent)"
+            className="h-9 rounded-xl border border-[color:var(--hairline)] bg-white px-4 text-sm font-medium text-[color:var(--ink-2)] transition hover:border-[color:var(--verified)] hover:text-[color:var(--verified)]"
           >
             Change email
           </button>
@@ -171,10 +171,10 @@ export function RecommenderVerificationGate({
   return (
     <form
       onSubmit={handleStart}
-      className="rounded-2xl border border-(--line) bg-white/70 shadow-sm backdrop-blur-sm p-5 text-sm space-y-3"
+      className="rounded-2xl border border-[color:var(--hairline)] bg-white/70 shadow-sm backdrop-blur-sm p-5 text-sm space-y-3"
     >
-      <div className="font-medium text-foreground">Verify your work email</div>
-      <div className="text-(--muted)">
+      <div className="font-medium text-[color:var(--ink)]">Verify your work email</div>
+      <div className="text-[color:var(--ink-3)]">
         Before writing a recommendation, please verify a work email at the company you're recommending
         from. We'll send a 6-digit code to confirm it's yours.
       </div>
@@ -183,7 +183,7 @@ export function RecommenderVerificationGate({
         autoComplete="email"
         value={email}
         onChange={(ev) => setEmail(ev.target.value)}
-        className="w-full rounded-xl border border-(--line) bg-white/90 px-3 py-2.5 outline-none focus:border-(--accent) focus:ring-1 focus:ring-(--accent)"
+        className="w-full rounded-xl border border-[color:var(--hairline)] bg-white/90 px-3 py-2.5 outline-none focus:border-[color:var(--verified)] focus:ring-1 focus:ring-[color:var(--verified)]"
         placeholder="you@company.com"
         required
       />
@@ -191,7 +191,7 @@ export function RecommenderVerificationGate({
       <button
         type="submit"
         disabled={submitting || !email}
-        className="h-9 rounded-xl bg-(--accent) px-4 text-sm font-semibold text-white transition hover:bg-foreground disabled:opacity-50"
+        className="h-9 rounded-xl bg-[color:var(--verified)] px-4 text-sm font-semibold text-white transition hover:bg-[color:var(--ink)] disabled:opacity-50"
       >
         {submitting ? "Sending…" : "Send code"}
       </button>
