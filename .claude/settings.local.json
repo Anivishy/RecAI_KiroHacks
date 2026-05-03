@@ -1,0 +1,7 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(Remove-Item \"c:\\\\Users\\\\anivi\\\\OneDrive\\\\Desktop\\\\DevThings\\\\RecAI\\\\RecAI\\\\packages\\\\shared\\\\src\\\\lib\\\\domain\\\\mock-data.ts\")"
+    ]
+  }
+}

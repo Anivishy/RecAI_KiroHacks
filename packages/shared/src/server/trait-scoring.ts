@@ -220,6 +220,7 @@ function buildScoringPrompt({
     "Reward specificity, repeated corroboration, and clear outcome language.",
     "Be conservative when evidence is thin, generic, or duplicated.",
     "Select the exact evidence segment IDs that best justify each score.",
+    "IMPORTANT: For each trait, select the evidence segments most SPECIFIC to that trait. Avoid reusing the same segment across many traits — prefer the segment that most directly demonstrates the trait in question. Each trait's rationale must be unique and describe what the evidence says about THAT specific trait, not a generic summary.",
     "",
     buildRubricBlock(),
     "",

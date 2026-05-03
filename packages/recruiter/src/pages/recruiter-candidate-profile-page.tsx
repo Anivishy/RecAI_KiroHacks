@@ -9,27 +9,23 @@ import {
   VerifiedDomains,
   appRoutes,
   buildExperienceRows,
-  buildPentagonForRecruiter,
   buildRelationMix,
   buildTrustStats,
   pentagonTraitMeta,
   type CandidateProfile,
-  type PentagonTrait,
 } from "@recai/shared";
 import { ExperienceList } from "@recai/candidate/components/profile/experience-list";
 import { HeroCard } from "@recai/candidate/components/profile/hero-card";
 import { getCandidateProfileBySlug } from "@recai/candidate/server/candidate-profile-db";
-import { Pentagon } from "../components/rail/pentagon";
 import { RecruiterAISummaryLoader } from "../components/rail/recruiter-ai-summary-loader";
 import { RecruiterAISummarySkeleton } from "../components/rail/recruiter-ai-summary-skeleton";
+import { RecruiterPentagonsLoader } from "../components/rail/recruiter-pentagons-loader";
+import { RecruiterPentagonsSkeleton } from "../components/rail/recruiter-pentagons-skeleton";
 import { requireRecruiterSession } from "../server/recruiter-auth";
 import {
   getJobPostingById,
   getJoinedCandidatesForPosting,
 } from "../server/recruiter-jobs";
-import { getOrGenerateTraitScorecard } from "../server/recruiter-trait-scoring";
-import { buildV2PentagonsForRecruiter } from "../server/v2-pentagon";
-import { buildTraitEvidenceSegments } from "@recai/shared/server/trait-scoring";
 
 type RecruiterCandidateProfilePageProps = {
   params: Promise<{ jobId: string; candidateSlug: string }>;
@@ -57,10 +53,6 @@ function getStatsFromCandidate(candidate: CandidateProfile) {
   return { avgTraitScore: avg, topTraitLabel: top.label, topTraitScore: top.score };
 }
 
-type PentagonLayout =
-  | { kind: "v2"; technical: PentagonTrait[]; behavioral: PentagonTrait[] }
-  | { kind: "v1"; traits: PentagonTrait[] };
-
 export async function RecruiterCandidateProfilePage({
   params,
 }: RecruiterCandidateProfilePageProps) {
@@ -77,19 +69,10 @@ export async function RecruiterCandidateProfilePage({
   );
   if (!isInPostingPool) notFound();
 
-  const [scorecard] = await Promise.all([
-    getOrGenerateTraitScorecard(candidate),
-  ]);
-
   const experienceRows = buildExperienceRows(candidate, candidate.recommendations);
   const trustStats = buildTrustStats(candidate.recommendations);
   const relationMix = buildRelationMix(candidate.recommendations);
   const stats = getStatsFromCandidate(candidate);
-  const evidenceSegments = buildTraitEvidenceSegments(candidate);
-
-  const pentagonLayout: PentagonLayout = scorecard
-    ? { kind: "v2", ...buildV2PentagonsForRecruiter(scorecard, evidenceSegments) }
-    : { kind: "v1", traits: buildPentagonForRecruiter(candidate.pentagonScores, candidate.projects) };
 
   return (
     <>
@@ -120,14 +103,9 @@ export async function RecruiterCandidateProfilePage({
           <ExperienceList rows={experienceRows} recommendations={candidate.recommendations} />
         </div>
         <aside className="grid gap-4 content-start">
-          {pentagonLayout.kind === "v2" ? (
-            <>
-              <Pentagon traits={pentagonLayout.technical} label="Technical · recruiter view" />
-              <Pentagon traits={pentagonLayout.behavioral} label="Behavioral · recruiter view" />
-            </>
-          ) : (
-            <Pentagon traits={pentagonLayout.traits} />
-          )}
+          <Suspense fallback={<RecruiterPentagonsSkeleton />}>
+            <RecruiterPentagonsLoader candidate={candidate} />
+          </Suspense>
           <TrustCard stats={trustStats} />
           <RelationMix entries={relationMix} />
           <VerifiedDomains domains={trustStats.domains} />
