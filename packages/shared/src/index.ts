@@ -36,6 +36,11 @@ export type {
   TraitRubricDefinition,
 } from "./lib/scoring/rubric";
 export { appRoutes } from "./lib/routes";
+export {
+  PERSONAL_EMAIL_DOMAINS,
+  extractEmailDomain,
+  isPersonalEmailDomain,
+} from "./lib/domain/personal-email-domains";
 export { LandingPage } from "./pages/landing-page";
 export * as Icons from "./components/icons";
 export { Card, CardHead, CardPad, CardPadTight } from "./components/card";

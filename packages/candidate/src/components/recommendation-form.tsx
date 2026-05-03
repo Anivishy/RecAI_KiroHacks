@@ -283,7 +283,7 @@ export function RecommendationForm({ rec: initial }: Props) {
                 <span className="font-medium text-[color:var(--ink)]">
                   {initial.recommenderName}
                   {initial.recommenderTitle ? ` · ${initial.recommenderTitle}` : ""}
-                  {initial.recommenderCompany ? `, ${initial.recommenderCompany}` : ""}
+                  {initial.verifiedCompany ? `, ${initial.verifiedCompany}` : ""}
                 </span>
               </div>
             )}

@@ -2,7 +2,8 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Card, CardHead, CardPad, Mono, appRoutes } from "@recai/shared";
 import { getRecommendationByToken } from "../server/recommendation-db";
-import { RecommendationForm } from "../components/recommendation-form";
+import { hasActiveOtp } from "../server/recommender-otp";
+import { RecommendationRequestClient } from "./recommendation-request-client";
 
 type Props = {
   params: Promise<{ requestId: string }>;
@@ -12,6 +13,8 @@ export async function RecommendationRequestPage({ params }: Props) {
   const { requestId: token } = await params;
   const rec = await getRecommendationByToken(token);
   if (!rec) notFound();
+
+  const otpPending = await hasActiveOtp(rec.id);
 
   return (
     <>
@@ -46,16 +49,9 @@ export async function RecommendationRequestPage({ params }: Props) {
           </p>
         </div>
 
-        <Card>
-          <CardHead eyebrow="Recommendation" />
-          <CardPad>
-            <RecommendationForm rec={rec} />
-            <Mono className="mt-5 block text-[11px] text-[color:var(--ink-4)]">
-              // verified content — becomes a permanent searchable record across recAI candidate profiles
-            </Mono>
-          </CardPad>
-        </Card>
-      </main>
-    </>
+          <RecommendationRequestClient rec={rec} initialOtpPending={otpPending} />
+        </main>
+      </div>
+    </div>
   );
 }

@@ -4,6 +4,12 @@ import { ensureCandidateAuthSchema } from "./candidate-auth";
 
 export type RecommendationStatus = "pending" | "draft" | "submitted" | "deleted";
 
+export type RecommendationVerificationStatus =
+  | "pending"
+  | "email_verified"
+  | "verified"
+  | "company_pending";
+
 export type RecommendationProject = {
   id: string;
   title: string;
@@ -31,6 +37,11 @@ export type RecommendationRequest = {
   submittedAt: string | null;
   deletedAt: string | null;
   createdAt: string;
+  verificationStatus: RecommendationVerificationStatus;
+  verifiedEmail: string | null;
+  verifiedDomain: string | null;
+  verifiedCompany: string | null;
+  verifiedCompanyId: string | null;
 };
 
 type RecommendationRow = {
@@ -53,6 +64,11 @@ type RecommendationRow = {
   submitted_at: Date | null;
   deleted_at: Date | null;
   created_at: Date;
+  verification_status: RecommendationVerificationStatus;
+  verified_email: string | null;
+  verified_domain: string | null;
+  verified_company: string | null;
+  verified_company_id: string | null;
 };
 
 function mapRow(row: RecommendationRow): RecommendationRequest {
@@ -76,6 +92,11 @@ function mapRow(row: RecommendationRow): RecommendationRequest {
     submittedAt: row.submitted_at?.toISOString() ?? null,
     deletedAt: row.deleted_at?.toISOString() ?? null,
     createdAt: row.created_at.toISOString(),
+    verificationStatus: row.verification_status ?? "pending",
+    verifiedEmail: row.verified_email,
+    verifiedDomain: row.verified_domain,
+    verifiedCompany: row.verified_company,
+    verifiedCompanyId: row.verified_company_id,
   };
 }
 
@@ -121,6 +142,40 @@ export async function ensureRecommendationSchema() {
         await client.query(`
           ALTER TABLE recommendation_requests
           ADD COLUMN IF NOT EXISTS candidate_slug TEXT
+        `);
+        await client.query(`
+          ALTER TABLE recommendation_requests
+          ADD COLUMN IF NOT EXISTS verification_status TEXT NOT NULL DEFAULT 'pending'
+        `);
+        await client.query(`
+          ALTER TABLE recommendation_requests
+          ADD COLUMN IF NOT EXISTS verified_email TEXT
+        `);
+        await client.query(`
+          ALTER TABLE recommendation_requests
+          ADD COLUMN IF NOT EXISTS verified_domain TEXT
+        `);
+        await client.query(`
+          ALTER TABLE recommendation_requests
+          ADD COLUMN IF NOT EXISTS verified_company TEXT
+        `);
+        await client.query(`
+          ALTER TABLE recommendation_requests
+          ADD COLUMN IF NOT EXISTS verified_company_id TEXT
+        `);
+        await client.query(`
+          CREATE TABLE IF NOT EXISTS recommendation_otps (
+            request_id TEXT PRIMARY KEY REFERENCES recommendation_requests(id) ON DELETE CASCADE,
+            email TEXT NOT NULL,
+            code_hash TEXT NOT NULL,
+            expires_at TIMESTAMPTZ NOT NULL,
+            attempts INTEGER NOT NULL DEFAULT 0,
+            created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+          )
+        `);
+        await client.query(`
+          CREATE INDEX IF NOT EXISTS recommendation_otps_expires_at_idx
+          ON recommendation_otps (expires_at)
         `);
         await client.query(`
           CREATE INDEX IF NOT EXISTS recommendation_requests_token_idx
@@ -218,7 +273,7 @@ export async function saveRecommendationDraft(
         projects = $4::jsonb,
         status = CASE WHEN status = 'pending' THEN 'draft' ELSE status END,
         updated_at = NOW()
-      WHERE token = $1 AND status IN ('pending', 'draft')
+      WHERE token = $1 AND status IN ('pending', 'draft') AND verification_status = 'verified'
       RETURNING *`,
     [token, data.technicalResponse, data.behavioralResponse, JSON.stringify(data.projects)],
   );
@@ -243,9 +298,60 @@ export async function submitRecommendation(
         status = 'submitted',
         submitted_at = NOW(),
         updated_at = NOW()
-      WHERE token = $1 AND status IN ('pending', 'draft') AND expires_at > NOW()
+      WHERE token = $1 AND status IN ('pending', 'draft') AND expires_at > NOW() AND verification_status = 'verified'
       RETURNING *`,
     [token, data.technicalResponse, data.behavioralResponse, JSON.stringify(data.projects)],
+  );
+  return result.rows[0] ? mapRow(result.rows[0]) : null;
+}
+
+export async function recordVerifiedCompany(
+  requestId: string,
+  data: {
+    verifiedEmail: string;
+    verifiedDomain: string;
+    verifiedCompany: string;
+    verifiedCompanyId: string;
+  },
+): Promise<RecommendationRequest | null> {
+  await ensureRecommendationSchema();
+  const result = await query<RecommendationRow>(
+    `UPDATE recommendation_requests
+       SET verification_status = 'verified',
+           verified_email = $2,
+           verified_domain = $3,
+           verified_company = $4,
+           verified_company_id = $5,
+           updated_at = NOW()
+     WHERE id = $1
+     RETURNING *`,
+    [
+      requestId,
+      data.verifiedEmail,
+      data.verifiedDomain,
+      data.verifiedCompany,
+      data.verifiedCompanyId,
+    ],
+  );
+  return result.rows[0] ? mapRow(result.rows[0]) : null;
+}
+
+export async function recordCompanyPending(
+  requestId: string,
+  data: { verifiedEmail: string; verifiedDomain: string },
+): Promise<RecommendationRequest | null> {
+  await ensureRecommendationSchema();
+  const result = await query<RecommendationRow>(
+    `UPDATE recommendation_requests
+       SET verification_status = 'company_pending',
+           verified_email = $2,
+           verified_domain = $3,
+           verified_company = NULL,
+           verified_company_id = NULL,
+           updated_at = NOW()
+     WHERE id = $1
+     RETURNING *`,
+    [requestId, data.verifiedEmail, data.verifiedDomain],
   );
   return result.rows[0] ? mapRow(result.rows[0]) : null;
 }
@@ -255,9 +361,7 @@ export type DeletedRecommendationInfo = {
   candidateSlug: string | null;
 };
 
-export async function deleteRecommendation(
-  token: string,
-): Promise<DeletedRecommendationInfo | null> {
+export async function deleteRecommendation(token: string): Promise<boolean> {
   await ensureRecommendationSchema();
   const result = await query<Pick<RecommendationRow, "candidate_id" | "candidate_slug">>(
     `UPDATE recommendation_requests
@@ -266,7 +370,7 @@ export async function deleteRecommendation(
       RETURNING candidate_id, candidate_slug`,
     [token],
   );
-  if ((result.rowCount ?? 0) === 0) return null;
+  if ((result.rowCount ?? 0) === 0) return false;
   const row = result.rows[0];
   return { candidateId: row?.candidate_id ?? null, candidateSlug: row?.candidate_slug ?? null };
 }

@@ -2,12 +2,12 @@
 
 ## Summary
 
-Add a verification gate to the recommender flow so that the company shown next to a recommendation is the one ZoomInfo associates with the recommender's verified work email, not the company the candidate typed in.
+Add a verification gate to the recommender flow so that the company shown next to a recommendation is the one ICANN RDAP associates with the recommender's verified work email, not the company the candidate typed in.
 
 The gate has two checks:
 
 1. Email OTP — proves the recommender controls the work email they entered.
-2. ZoomInfo domain lookup — proves the email's domain belongs to a real company, and yields the canonical company name and id stored on the request.
+2. ICANN RDAP domain lookup — proves the email's domain belongs to a real company, and yields the canonical company name and id stored on the request.
 
 A recommender cannot open the recommendation form until both checks pass.
 
@@ -17,7 +17,7 @@ Today a candidate creates a `recommendation_request` and supplies the recommende
 
 For the hackathon demo we want recommendations to read as trustworthy:
 
-- The displayed company must come from an authoritative source (ZoomInfo), not the candidate.
+- The displayed company must come from an authoritative source (ICANN RDAP), not the candidate.
 - The recommender must prove ownership of an email at a non-personal domain before the form unlocks.
 - Candidate-entered company stays in the row as an unverified hint, never displayed as verified.
 
@@ -30,7 +30,7 @@ In scope:
 - New verification state on `recommendation_requests` separate from existing form-lifecycle state.
 - OTP issuance, hashing, expiry, and attempt-cap enforcement.
 - Resend integration for delivering the OTP email.
-- A swappable company-lookup service with a ZoomInfo implementation and a stub implementation for local dev.
+- A swappable company-lookup service with a ICANN RDAP implementation and a stub implementation for local dev.
 - Three new API routes under `/api/recommend/[token]`.
 - A two-stage verification UI in front of the existing recommendation form on `/recommend/[requestId]`.
 - Gating of the existing `save` and `submit` routes on verification status.
@@ -72,8 +72,8 @@ Out of scope:
 | `verification_status` | `TEXT` | One of `pending`, `email_verified`, `verified`, `company_pending`. Default `pending`. |
 | `verified_email` | `TEXT` | Email the recommender proved control of via OTP. Distinct from candidate-supplied `recommender_email`. |
 | `verified_domain` | `TEXT` | Lowercased domain extracted from `verified_email`. |
-| `verified_company` | `TEXT` | Company name returned by ZoomInfo for `verified_domain`. |
-| `zoom_info_company_id` | `TEXT` | ZoomInfo identifier for the company. |
+| `verified_company` | `TEXT` | Company name returned by ICANN RDAP for `verified_domain`. |
+| `verified_company_id` | `TEXT` | Stable identifier for the matched company. For RDAP this is the registrant entity handle when available, falling back to the domain itself. |
 
 The existing `status` column is unchanged and continues to track form lifecycle (`pending | draft | submitted | deleted`). The two columns are orthogonal.
 
@@ -96,19 +96,19 @@ One row per active OTP. Replaced (delete-then-insert in a transaction) when a ne
 
 ```
 pending ──start-verification──▶ pending (OTP issued; status unchanged)
-pending ──verify-code (otp ok, zoominfo hit)──▶ verified
-pending ──verify-code (otp ok, zoominfo miss/error)──▶ company_pending
+pending ──verify-code (otp ok, rdap hit)──▶ verified
+pending ──verify-code (otp ok, rdap miss/error)──▶ company_pending
 
 company_pending ──start-verification──▶ company_pending (new OTP issued for a different email)
-company_pending ──verify-code (otp ok, zoominfo hit)──▶ verified
-company_pending ──verify-code (otp ok, zoominfo miss/error)──▶ company_pending
+company_pending ──verify-code (otp ok, rdap hit)──▶ verified
+company_pending ──verify-code (otp ok, rdap miss/error)──▶ company_pending
 
 verified ──(terminal for verification; form lifecycle continues separately)──▶
 ```
 
 `start-verification` is allowed from `pending` and `company_pending`. It is rejected once `verification_status = 'verified'`.
 
-`email_verified` is reserved for the case where OTP verification succeeded but the ZoomInfo lookup could not be completed (e.g. transient network error rather than a definitive miss). The verify-code handler currently treats lookup errors and lookup misses both as `company_pending`, so `email_verified` is not written by the initial implementation. It is kept in the enum so a later iteration can split "company definitively unknown" from "company lookup failed, retry possible" without a migration.
+`email_verified` is reserved for the case where OTP verification succeeded but the ICANN RDAP lookup could not be completed (e.g. transient network error rather than a definitive miss). The verify-code handler currently treats lookup errors and lookup misses both as `company_pending`, so `email_verified` is not written by the initial implementation. It is kept in the enum so a later iteration can split "company definitively unknown" from "company lookup failed, retry possible" without a migration.
 
 ### Endpoint contracts
 
@@ -125,8 +125,8 @@ verified ──(terminal for verification; form lifecycle continues separately)�
 - Body: `{ code: string }` (exactly 6 digits).
 - Validates: an OTP row exists for the request, `expires_at > now()`, `attempts < 5`, `code_hash` matches. Increments `attempts` on every call.
 - On match: deletes the OTP row, sets `verified_email`, `verified_domain`, calls the company-lookup service.
-  - Hit: sets `verified_company`, `zoom_info_company_id`, `verification_status = 'verified'`.
-  - Miss or error: sets `verification_status = 'company_pending'`. `verified_company` and `zoom_info_company_id` remain null.
+  - Hit: sets `verified_company`, `verified_company_id`, `verification_status = 'verified'`.
+  - Miss or error: sets `verification_status = 'company_pending'`. `verified_company` and `verified_company_id` remain null.
 - Returns: `{ verificationStatus, verifiedDomain, verifiedCompany | null }`.
 - Errors: `400` (malformed), `404` (no active OTP), `410` (expired), `429` (attempts exhausted), `401` (mismatch).
 
@@ -156,9 +156,9 @@ export interface CompanyLookupService {
 export function getCompanyLookupService(): CompanyLookupService;
 ```
 
-`getCompanyLookupService()` returns the ZoomInfo implementation when `ZOOMINFO_API_KEY` is set, otherwise the stub. The stub reads a domain→company JSON map from `RECOMMENDER_STUB_COMPANY_MAP` (env var, JSON-encoded) so demos work without ZoomInfo credentials.
+`getCompanyLookupService()` returns the ICANN RDAP implementation when `ZOOMINFO_API_KEY` is set, otherwise the stub. The stub reads a domain→company JSON map from `RECOMMENDER_STUB_COMPANY_MAP` (env var, JSON-encoded) so demos work without ICANN RDAP credentials.
 
-The ZoomInfo implementation lives in `zoom-info.ts` next to `index.ts` and is the only file that knows about the ZoomInfo HTTP shape. Errors and 404s from ZoomInfo both resolve to `null` (caller treats the two identically as `company_pending`).
+The ICANN RDAP implementation lives in `zoom-info.ts` next to `index.ts` and is the only file that knows about the ICANN RDAP HTTP shape. Errors and 404s from ICANN RDAP both resolve to `null` (caller treats the two identically as `company_pending`).
 
 ### Email service
 
@@ -171,8 +171,8 @@ The ZoomInfo implementation lives in `zoom-info.ts` next to `index.ts` and is th
 3. Enter `me@acme.com`. Receive an OTP email via Resend (or log line in dev). `verification_status` is still `pending`.
 4. Enter the wrong code 5 times. Sixth attempt is rejected with attempts-exhausted; the OTP is now dead.
 5. Click "Resend code" — a new OTP is issued. Enter the correct code within 10 minutes.
-6. With ZoomInfo configured to recognize `acme.com` (or via the stub map), `verification_status` becomes `verified`. The form unlocks. The page header shows "Verified at: <ZoomInfo company name> — acme.com".
-7. With ZoomInfo configured to return null for `acme.com`, `verification_status` becomes `company_pending`. The form stays locked. The recommender can re-enter a different work email and start over.
+6. With ICANN RDAP configured to recognize `acme.com` (or via the stub map), `verification_status` becomes `verified`. The form unlocks. The page header shows "Verified at: <ICANN RDAP company name> — acme.com".
+7. With ICANN RDAP configured to return null for `acme.com`, `verification_status` becomes `company_pending`. The form stays locked. The recommender can re-enter a different work email and start over.
 8. While `verification_status !== 'verified'`, `POST /save` and `POST /submit` return `403`.
 9. Submit the recommendation. View it on the candidate's public profile and in the recruiter review page — the company shown is `verified_company`, not the candidate-entered `recommender_company`.
 10. Let an OTP expire by waiting 10 minutes; verify rejects with `410`.
@@ -184,9 +184,8 @@ Added to `.env.example`:
 ```
 RESEND_API_KEY=
 RESEND_FROM_EMAIL=verify@recai.app
-ZOOMINFO_API_KEY=
-ZOOMINFO_USERNAME=
 RECOMMENDER_OTP_SALT=
+RECOMMENDER_USE_STUB_COMPANY_LOOKUP=
 RECOMMENDER_STUB_COMPANY_MAP=
 ```
 
@@ -194,6 +193,6 @@ RECOMMENDER_STUB_COMPANY_MAP=
 
 ## Open Questions
 
-- ZoomInfo's actual API shape and auth (API key vs OAuth username/password) is not pinned down here. The `zoom-info.ts` module is isolated so this can be filled in once we have credentials without disturbing the rest of the flow.
+- ICANN RDAP's actual API shape and auth (API key vs OAuth username/password) is not pinned down here. The `zoom-info.ts` module is isolated so this can be filled in once we have credentials without disturbing the rest of the flow.
 - Should a `company_pending` outcome show the recommender what domain we tried to look up? Current design: yes, inline in the failure message. Reconsider if this leaks too much.
 - Resend sandbox vs production sender domain configuration is deferred to deployment-time setup.

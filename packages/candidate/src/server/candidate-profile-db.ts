@@ -167,7 +167,7 @@ function buildRecommendationSnippets(
         normalizeText(recommendation.recommenderName) || "Verified recommender",
       recommenderTitle:
         normalizeText(recommendation.recommenderTitle) || "Recommender",
-      company: normalizeText(recommendation.recommenderCompany) || "Company not shared",
+      company: normalizeText(recommendation.verifiedCompany ?? "") || "Company not shared",
       relationship:
         normalizeText(recommendation.relationship) || "Worked together",
       submittedAt:
