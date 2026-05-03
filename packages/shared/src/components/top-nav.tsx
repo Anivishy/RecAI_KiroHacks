@@ -23,7 +23,7 @@ function getInitials(fullName: string) {
   return `${first}${last}`.toUpperCase();
 }
 
-export function TopNav({ viewer, rightSlot, showSearch = true }: TopNavProps) {
+export function TopNav({ viewer, rightSlot, showSearch = false }: TopNavProps) {
   return (
     <nav className="sticky top-0 z-30 border-b border-[color:var(--hairline)] bg-[color:var(--paper)]/80 backdrop-blur-[10px] backdrop-saturate-[140%]">
       <div className="mx-auto flex h-14 max-w-[1240px] items-center gap-5 px-6 sm:px-8">
