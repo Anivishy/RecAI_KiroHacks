@@ -26,8 +26,43 @@ function ringPoints(total: number, factor: number): string {
   }).join(" ");
 }
 
+function TraitDetail({ trait }: { trait: PentagonTrait }) {
+  return (
+    <div className="grid gap-3">
+      <div className="flex items-center justify-between gap-3">
+        <Mono className="text-[11px] uppercase tracking-[0.08em] text-[color:var(--ink-3)]">
+          {trait.name} · bedrock scoring
+        </Mono>
+        {trait.confidence !== undefined ? (
+          <Mono className="text-[11px] text-[color:var(--verified)]">
+            {trait.confidence}/100 conf
+          </Mono>
+        ) : null}
+      </div>
+      {trait.rationale ? (
+        <p className="text-[13px] leading-5 text-[color:var(--ink-2)]">
+          {trait.rationale}
+        </p>
+      ) : null}
+      {trait.projects[0] ? (
+        <div className="rounded-[var(--r-md)] border border-[color:var(--hairline)] bg-[color:var(--surface-2)] px-3 py-2.5">
+          <Mono className="text-[10px] uppercase tracking-[0.08em] text-[color:var(--ink-3)]">
+            {trait.projects[0].name}
+          </Mono>
+          <p className="mt-1 line-clamp-4 text-[12px] leading-5 text-[color:var(--ink-2)]">
+            {trait.projects[0].description}
+          </p>
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
 export function Pentagon({ traits, label }: PentagonProps) {
-  const [active, setActive] = useState<number | null>(null);
+  const [hovered, setHovered] = useState<number | null>(null);
+  const [pinned, setPinned] = useState<number | null>(null);
+
+  const active = pinned ?? hovered;
   const total = traits.length;
   const dataPoints = traits.map((t, i) => vertex(i, total, R * (t.score / 100)));
   const dataPath = dataPoints.map(([x, y]) => `${x.toFixed(1)},${y.toFixed(1)}`).join(" ");
@@ -37,6 +72,10 @@ export function Pentagon({ traits, label }: PentagonProps) {
     traits.length === 0
       ? 0
       : Math.round(traits.reduce((sum, t) => sum + t.score, 0) / traits.length);
+
+  function handleClick(i: number) {
+    setPinned((prev) => (prev === i ? null : i));
+  }
 
   return (
     <Card>
@@ -86,13 +125,15 @@ export function Pentagon({ traits, label }: PentagonProps) {
           />
           {dataPoints.map(([x, y], i) => {
             const isActive = active === i;
+            const isPinned = pinned === i;
             return (
               <g
                 key={`vertex-${i}`}
-                onMouseEnter={() => setActive(i)}
-                onMouseLeave={() => setActive(null)}
-                onFocus={() => setActive(i)}
-                onBlur={() => setActive(null)}
+                onMouseEnter={() => setHovered(i)}
+                onMouseLeave={() => setHovered(null)}
+                onClick={() => handleClick(i)}
+                onFocus={() => setHovered(i)}
+                onBlur={() => setHovered(null)}
                 tabIndex={0}
                 style={{ cursor: "pointer" }}
               >
@@ -101,10 +142,21 @@ export function Pentagon({ traits, label }: PentagonProps) {
                   cx={x}
                   cy={y}
                   r={isActive ? 5 : 3.5}
-                  fill={isActive ? "var(--verified)" : "var(--ink)"}
-                  stroke="var(--surface)"
+                  fill={isPinned ? "var(--verified)" : isActive ? "var(--verified)" : "var(--ink)"}
+                  stroke={isPinned ? "var(--verified)" : "var(--surface)"}
                   strokeWidth={2}
                 />
+                {isPinned ? (
+                  <circle
+                    cx={x}
+                    cy={y}
+                    r={9}
+                    fill="none"
+                    stroke="var(--verified)"
+                    strokeWidth={1.5}
+                    strokeOpacity={0.4}
+                  />
+                ) : null}
               </g>
             );
           })}
@@ -113,11 +165,13 @@ export function Pentagon({ traits, label }: PentagonProps) {
             const [lx, ly] = labelPositions[i];
             const anchor = Math.abs(lx - cx) < 4 ? "middle" : lx < cx ? "end" : "start";
             const isActive = active === i;
+            const isPinned = pinned === i;
             return (
               <g
                 key={`label-${trait.id}`}
-                onMouseEnter={() => setActive(i)}
-                onMouseLeave={() => setActive(null)}
+                onMouseEnter={() => setHovered(i)}
+                onMouseLeave={() => setHovered(null)}
+                onClick={() => handleClick(i)}
                 style={{ cursor: "pointer" }}
               >
                 <text
@@ -126,7 +180,7 @@ export function Pentagon({ traits, label }: PentagonProps) {
                   textAnchor={anchor}
                   dominantBaseline="middle"
                   style={{
-                    fill: isActive ? "var(--ink)" : "var(--ink-2)",
+                    fill: isPinned ? "var(--verified)" : isActive ? "var(--ink)" : "var(--ink-2)",
                     fontSize: 12,
                     fontWeight: isActive ? 600 : 500,
                     letterSpacing: "0.02em",
@@ -151,36 +205,20 @@ export function Pentagon({ traits, label }: PentagonProps) {
       </div>
       <div className="border-t border-dashed border-[color:var(--hairline)] px-5 py-3 text-[13px]">
         {activeTrait ? (
-          <div className="grid gap-3">
-            <div className="flex items-center justify-between gap-3">
-              <Mono className="text-[11px] uppercase tracking-[0.08em] text-[color:var(--ink-3)]">
-                {activeTrait.name} · bedrock scoring
-              </Mono>
-              {activeTrait.confidence !== undefined ? (
-                <Mono className="text-[11px] text-[color:var(--verified)]">
-                  {activeTrait.confidence}/100 conf
-                </Mono>
-              ) : null}
-            </div>
-            {activeTrait.rationale ? (
-              <p className="text-[13px] leading-5 text-[color:var(--ink-2)]">
-                {activeTrait.rationale}
-              </p>
+          <div>
+            {pinned !== null ? (
+              <button
+                onClick={() => setPinned(null)}
+                className="mb-2 text-[11px] text-[color:var(--ink-4)] hover:text-[color:var(--ink-2)] transition-colors"
+              >
+                ✕ close
+              </button>
             ) : null}
-            {activeTrait.projects[0] ? (
-              <div className="rounded-[var(--r-md)] border border-[color:var(--hairline)] bg-[color:var(--surface-2)] px-3 py-2.5">
-                <Mono className="text-[10px] uppercase tracking-[0.08em] text-[color:var(--ink-3)]">
-                  {activeTrait.projects[0].name}
-                </Mono>
-                <p className="mt-1 line-clamp-4 text-[12px] leading-5 text-[color:var(--ink-2)]">
-                  {activeTrait.projects[0].description}
-                </p>
-              </div>
-            ) : null}
+            <TraitDetail trait={activeTrait} />
           </div>
         ) : (
           <Mono className="text-[12px] text-[color:var(--ink-4)]">
-            // hover a vertex to inspect
+            // hover to preview · click to pin
           </Mono>
         )}
       </div>
