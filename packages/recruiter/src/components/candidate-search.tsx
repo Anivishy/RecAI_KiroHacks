@@ -11,11 +11,17 @@ type SearchResult = {
   chunks: string[];
 };
 
-type CandidateSearchProps = {
-  jobId: string;
+type DefaultCandidate = {
+  candidateSlug: string;
+  candidateName: string;
 };
 
-export function CandidateSearch({ jobId }: CandidateSearchProps) {
+type CandidateSearchProps = {
+  jobId: string;
+  defaultCandidates: DefaultCandidate[];
+};
+
+export function CandidateSearch({ jobId, defaultCandidates }: CandidateSearchProps) {
   const [results, setResults] = useState<SearchResult[] | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -46,11 +52,21 @@ export function CandidateSearch({ jobId }: CandidateSearchProps) {
     runSearch(query);
   }
 
+  function handleClear() {
+    setResults(null);
+    setError(null);
+    if (inputRef.current) inputRef.current.value = "";
+  }
+
   const exampleQueries = [
     "Strong Python systems experience and clear ownership",
     "Cross-functional leadership with measurable execution",
     "Backend engineers who communicate well with product teams",
   ];
+
+  const showingFiltered = results !== null;
+  const displayList: (DefaultCandidate & { score?: number; chunks?: string[] })[] =
+    showingFiltered ? results : defaultCandidates;
 
   return (
     <div className="flex flex-col gap-4">
@@ -58,7 +74,7 @@ export function CandidateSearch({ jobId }: CandidateSearchProps) {
         <input
           className="h-10 flex-1 rounded-xl border border-[color:var(--hairline)] bg-[color:var(--surface)] px-3 text-sm text-[color:var(--ink)] outline-none transition placeholder:text-[color:var(--ink-3)] focus:border-[color:var(--verified)] focus:ring-1 focus:ring-[color:var(--verified)]"
           disabled={isLoading}
-          placeholder='e.g. "Show me candidates with strong Python systems experience and ownership"'
+          placeholder='Filter by natural language, e.g. "Strong Python systems experience and ownership"'
           ref={inputRef}
           type="text"
         />
@@ -67,11 +83,26 @@ export function CandidateSearch({ jobId }: CandidateSearchProps) {
           disabled={isLoading}
           type="submit"
         >
-          {isLoading ? "Searching…" : "Search"}
+          {isLoading ? "Searching…" : "Filter"}
         </button>
+        {showingFiltered && (
+          <button
+            className="h-10 shrink-0 rounded-xl border border-[color:var(--hairline)] px-4 text-sm text-[color:var(--ink-2)] transition hover:border-[color:var(--hairline-2)] hover:text-[color:var(--ink)]"
+            onClick={handleClear}
+            type="button"
+          >
+            Clear
+          </button>
+        )}
       </form>
 
-      {!results && !isLoading && (
+      {!showingFiltered && !isLoading && defaultCandidates.length === 0 && (
+        <p className="text-sm text-[color:var(--ink-3)]">
+          No candidates have joined this posting yet. Share the invite link to get started.
+        </p>
+      )}
+
+      {!showingFiltered && !isLoading && defaultCandidates.length > 0 && (
         <div className="flex flex-wrap gap-2">
           {exampleQueries.map((q) => (
             <button
@@ -92,17 +123,17 @@ export function CandidateSearch({ jobId }: CandidateSearchProps) {
       {error && <p className="text-sm text-red-500">{error}</p>}
 
       {isLoading && (
-        <p className="text-sm text-[color:var(--ink-3)]">Searching candidate pool…</p>
+        <p className="text-sm text-[color:var(--ink-3)]">Filtering candidate pool…</p>
       )}
 
-      {results && results.length === 0 && (
-        <p className="text-sm text-[color:var(--ink-3)]">No matching candidates found.</p>
+      {showingFiltered && results.length === 0 && (
+        <p className="text-sm text-[color:var(--ink-3)]">No candidates matched that query.</p>
       )}
 
-      {results && results.length > 0 && (
+      {displayList.length > 0 && !isLoading && (
         <Card>
           <div className="flex flex-col divide-y divide-[color:var(--hairline)]">
-            {results.map((r) => (
+            {displayList.map((r) => (
               <Link
                 className="block px-5 py-4 transition hover:bg-[color:var(--surface-2)]"
                 href={appRoutes.recruiterCandidateProfile(jobId, r.candidateSlug)}
@@ -122,15 +153,17 @@ export function CandidateSearch({ jobId }: CandidateSearchProps) {
                     </span>
                   </div>
                   <div className="flex items-center gap-3">
-                    <span className="mono text-xs text-[color:var(--ink-3)]">
-                      {(r.score * 100).toFixed(0)}% match
-                    </span>
+                    {r.score !== undefined ? (
+                      <span className="mono text-xs text-[color:var(--ink-3)]">
+                        {(r.score * 100).toFixed(0)}% match
+                      </span>
+                    ) : null}
                     <span className="text-xs font-semibold text-[color:var(--ink)]">
                       Open →
                     </span>
                   </div>
                 </div>
-                {r.chunks.length > 0 && (
+                {r.chunks && r.chunks.length > 0 && (
                   <ul className="flex flex-col gap-1">
                     {r.chunks.map((chunk, i) => (
                       <li

@@ -1,6 +1,10 @@
 import { Pinecone } from "@pinecone-database/pinecone";
-import { getCandidateProfilesForPosting } from "@recai/candidate/server/candidate-profile-db";
+import {
+  getCandidateProfilesForPosting,
+  getCandidateProfileBySlug,
+} from "@recai/candidate/server/candidate-profile-db";
 import type { CandidateProfile } from "@recai/shared";
+import { getPostingIdsForCandidate } from "./recruiter-jobs";
 
 const INDEX_NAME = "candidate-profile-index";
 
@@ -151,4 +155,44 @@ export async function searchCandidatePool(
   }
 
   return Array.from(byCandidate.values()).sort((a, b) => b.score - a.score);
+}
+
+export async function reindexCandidateAcrossPostings(
+  candidateId: string,
+  candidateSlug: string,
+): Promise<void> {
+  const [postingIds, freshProfile] = await Promise.all([
+    getPostingIdsForCandidate(candidateId),
+    getCandidateProfileBySlug(candidateSlug),
+  ]);
+
+  if (postingIds.length === 0 || !freshProfile) return;
+
+  const index = await ensureIndex();
+
+  for (const jobId of postingIds) {
+    const ns = index.namespace(jobId);
+
+    // Build the superset of IDs this candidate could have in this namespace
+    // and delete them before re-upserting fresh data.
+    const base = `${jobId}__${candidateSlug}`;
+    const staleIds = [
+      `${base}__overview`,
+      ...Array.from({ length: 30 }, (_, i) => `${base}__project__${i}`),
+      ...Array.from({ length: 30 }, (_, i) => `${base}__rec__${i}`),
+    ];
+
+    try {
+      await ns.deleteMany(staleIds);
+    } catch {
+      // deleteMany may fail if namespace is empty; swallow and continue
+    }
+
+    const freshRecords = buildRecords(jobId, freshProfile);
+    if (freshRecords.length > 0) {
+      for (let i = 0; i < freshRecords.length; i += 96) {
+        await ns.upsertRecords({ records: freshRecords.slice(i, i + 96) });
+      }
+    }
+  }
 }

@@ -172,10 +172,12 @@ export type PentagonProject = {
 };
 
 export type PentagonTrait = {
-  id: PentagonTraitId;
+  id: string;
   name: string;
   shortLabel: string;
   score: number;
+  confidence?: number;
+  rationale?: string;
   projects: PentagonProject[];
 };
 

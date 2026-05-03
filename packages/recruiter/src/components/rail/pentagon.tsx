@@ -5,6 +5,7 @@ import { Card, CardHead, Mono, type PentagonTrait } from "@recai/shared";
 
 type PentagonProps = {
   traits: PentagonTrait[];
+  label?: string;
 };
 
 const W = 460;
@@ -25,7 +26,7 @@ function ringPoints(total: number, factor: number): string {
   }).join(" ");
 }
 
-export function Pentagon({ traits }: PentagonProps) {
+export function Pentagon({ traits, label }: PentagonProps) {
   const [active, setActive] = useState<number | null>(null);
   const total = traits.length;
   const dataPoints = traits.map((t, i) => vertex(i, total, R * (t.score / 100)));
@@ -40,7 +41,7 @@ export function Pentagon({ traits }: PentagonProps) {
   return (
     <Card>
       <CardHead
-        eyebrow="Trait pentagon · recruiter view"
+        eyebrow={label ?? "Trait pentagon · recruiter view"}
         meta={<Mono>avg {avg} · n={traits.length}</Mono>}
       />
       <div className="px-2 pt-2 pb-3">
@@ -149,28 +150,42 @@ export function Pentagon({ traits }: PentagonProps) {
         </svg>
       </div>
       <div className="border-t border-dashed border-[color:var(--hairline)] px-5 py-3 text-[13px]">
-        {activeTrait && activeTrait.projects[0] ? (
+        {activeTrait && (activeTrait.rationale ?? activeTrait.projects[0]) ? (
           <>
             <div className="flex items-center justify-between gap-3 text-[11px]">
               <Mono className="uppercase tracking-[0.08em] text-[color:var(--ink-3)]">
-                Top match · {activeTrait.name}
+                {activeTrait.rationale ? `${activeTrait.name} · reasoning` : `Top match · ${activeTrait.name}`}
               </Mono>
-              <Mono className="text-[color:var(--verified)]">
-                {activeTrait.projects[0].similarity.toFixed(2)} sim
-              </Mono>
+              {activeTrait.rationale && activeTrait.confidence !== undefined ? (
+                <Mono className="text-[color:var(--verified)]">
+                  {activeTrait.confidence}/100 conf
+                </Mono>
+              ) : activeTrait.projects[0] ? (
+                <Mono className="text-[color:var(--verified)]">
+                  {activeTrait.projects[0].similarity.toFixed(2)} sim
+                </Mono>
+              ) : null}
             </div>
             <div className="mt-1.5">
-              <strong className="text-[13px] text-[color:var(--ink)]">
-                {activeTrait.projects[0].name}
-              </strong>
-              <p className="mt-1 line-clamp-3 text-[13px] leading-5 text-[color:var(--ink-2)]">
-                {activeTrait.projects[0].description}
-              </p>
+              {activeTrait.rationale ? (
+                <p className="mt-1 line-clamp-4 text-[13px] leading-5 text-[color:var(--ink-2)]">
+                  {activeTrait.rationale}
+                </p>
+              ) : activeTrait.projects[0] ? (
+                <>
+                  <strong className="text-[13px] text-[color:var(--ink)]">
+                    {activeTrait.projects[0].name}
+                  </strong>
+                  <p className="mt-1 line-clamp-3 text-[13px] leading-5 text-[color:var(--ink-2)]">
+                    {activeTrait.projects[0].description}
+                  </p>
+                </>
+              ) : null}
             </div>
           </>
         ) : (
           <Mono className="text-[12px] text-[color:var(--ink-4)]">
-            // hover a vertex to surface the highest-scoring project
+            // hover a vertex to inspect
           </Mono>
         )}
       </div>

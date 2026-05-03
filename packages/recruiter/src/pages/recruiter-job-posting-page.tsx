@@ -3,7 +3,7 @@ import { Card, CardHead, Mono, appRoutes } from "@recai/shared";
 import { RecruiterShell } from "../components/recruiter-shell";
 import { CandidateSearch } from "../components/candidate-search";
 import { requireRecruiterSession } from "../server/recruiter-auth";
-import { getJobPostingById } from "../server/recruiter-jobs";
+import { getJobPostingById, getJoinedCandidatesForPosting } from "../server/recruiter-jobs";
 
 type RecruiterJobPostingPageProps = {
   params: Promise<{ jobId: string }>;
@@ -19,7 +19,10 @@ function buildInviteUrl(inviteCode: string) {
 export async function RecruiterJobPostingPage({ params }: RecruiterJobPostingPageProps) {
   const recruiter = await requireRecruiterSession();
   const { jobId } = await params;
-  const posting = await getJobPostingById(jobId, recruiter.id);
+  const [posting, joinedCandidates] = await Promise.all([
+    getJobPostingById(jobId, recruiter.id),
+    getJoinedCandidatesForPosting(jobId),
+  ]);
   if (!posting) notFound();
   const inviteUrl = buildInviteUrl(posting.inviteCode);
 
@@ -76,7 +79,13 @@ export async function RecruiterJobPostingPage({ params }: RecruiterJobPostingPag
           meta={<Mono className="text-[color:var(--verified)]">AI search</Mono>}
         />
         <div className="px-5 py-4">
-          <CandidateSearch jobId={posting.id} />
+          <CandidateSearch
+            jobId={posting.id}
+            defaultCandidates={joinedCandidates.map((c) => ({
+              candidateSlug: c.candidateSlug,
+              candidateName: c.candidateName,
+            }))}
+          />
         </div>
       </Card>
     </RecruiterShell>

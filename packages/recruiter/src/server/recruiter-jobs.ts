@@ -438,3 +438,12 @@ export async function getJoinedCandidatesForPosting(
 
   return result.rows.map(mapJobPostingCandidateMembership);
 }
+
+export async function getPostingIdsForCandidate(candidateId: string): Promise<string[]> {
+  await ensureRecruiterJobsSchema();
+  const result = await query<{ job_id: string }>(
+    `SELECT job_id FROM posting_candidates WHERE candidate_id = $1`,
+    [candidateId],
+  );
+  return result.rows.map((r) => r.job_id);
+}

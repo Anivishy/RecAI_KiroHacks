@@ -1,5 +1,6 @@
 import {
   TopNav,
+  appRoutes,
   buildExperienceRows,
 } from "@recai/shared";
 import { getJoinedPostingsForCandidate } from "@recai/recruiter/server/recruiter-jobs";
@@ -102,6 +103,7 @@ export async function CandidateDashboardPage({ searchParams }: CandidateDashboar
             location={candidateProfile?.location}
             joinedLabel={candidateProfile ? `${candidateProfile.yearsExperience}+ yrs experience` : null}
             contactLinks={buildContactLinks(banner)}
+            primaryActionHref={appRoutes.candidateRecommendationNew}
           />
           <ExperienceList rows={experienceRows} recommendations={recommendations} />
         </div>

@@ -18,7 +18,7 @@ type HeroCardProps = {
   joinedLabel?: string | null;
   contactLinks: HeroLink[];
   bannerSlot?: ReactNode;
-  primaryActionHref?: string;
+  primaryActionHref?: string | null;
   primaryActionLabel?: string;
   shareSlot?: ReactNode;
 };
@@ -45,7 +45,7 @@ export function HeroCard({
   joinedLabel,
   contactLinks,
   bannerSlot,
-  primaryActionHref = appRoutes.candidateRecommendationNew,
+  primaryActionHref,
   primaryActionLabel = "Request a recommendation",
   shareSlot,
 }: HeroCardProps) {
@@ -104,15 +104,19 @@ export function HeroCard({
               </div>
             </div>
           </div>
-          <div className="flex flex-wrap items-center gap-2">
-            <Link
-              href={primaryActionHref}
-              className="inline-flex items-center gap-2 rounded-full bg-[color:var(--ink)] px-4 py-2 text-[13px] font-semibold text-white transition hover:bg-[color:var(--verified-2)]"
-            >
-              <Icons.Plus /> {primaryActionLabel}
-            </Link>
-            {shareSlot}
-          </div>
+          {(primaryActionHref ?? shareSlot) ? (
+            <div className="flex flex-wrap items-center gap-2">
+              {primaryActionHref ? (
+                <Link
+                  href={primaryActionHref}
+                  className="inline-flex items-center gap-2 rounded-full bg-[color:var(--ink)] px-4 py-2 text-[13px] font-semibold text-white transition hover:bg-[color:var(--verified-2)]"
+                >
+                  <Icons.Plus /> {primaryActionLabel}
+                </Link>
+              ) : null}
+              {shareSlot}
+            </div>
+          ) : null}
         </div>
 
         {bannerSlot ?? (

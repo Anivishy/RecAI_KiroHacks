@@ -250,15 +250,25 @@ export async function submitRecommendation(
   return result.rows[0] ? mapRow(result.rows[0]) : null;
 }
 
-export async function deleteRecommendation(token: string): Promise<boolean> {
+export type DeletedRecommendationInfo = {
+  candidateId: string | null;
+  candidateSlug: string | null;
+};
+
+export async function deleteRecommendation(
+  token: string,
+): Promise<DeletedRecommendationInfo | null> {
   await ensureRecommendationSchema();
-  const result = await query(
+  const result = await query<Pick<RecommendationRow, "candidate_id" | "candidate_slug">>(
     `UPDATE recommendation_requests
       SET status = 'deleted', deleted_at = NOW(), updated_at = NOW()
-      WHERE token = $1 AND status = 'submitted'`,
+      WHERE token = $1 AND status = 'submitted'
+      RETURNING candidate_id, candidate_slug`,
     [token],
   );
-  return (result.rowCount ?? 0) > 0;
+  if ((result.rowCount ?? 0) === 0) return null;
+  const row = result.rows[0];
+  return { candidateId: row?.candidate_id ?? null, candidateSlug: row?.candidate_slug ?? null };
 }
 
 export async function getRecommendationRequestsForCandidate(

@@ -13,6 +13,7 @@ import {
   buildTrustStats,
   pentagonTraitMeta,
   type CandidateProfile,
+  type PentagonTrait,
 } from "@recai/shared";
 import { ExperienceList } from "@recai/candidate/components/profile/experience-list";
 import { HeroCard } from "@recai/candidate/components/profile/hero-card";
@@ -25,6 +26,8 @@ import {
   getJobPostingById,
   getJoinedCandidatesForPosting,
 } from "../server/recruiter-jobs";
+import { getOrGenerateTraitScorecard } from "../server/recruiter-trait-scoring";
+import { buildV2PentagonsForRecruiter } from "../server/v2-pentagon";
 
 type RecruiterCandidateProfilePageProps = {
   params: Promise<{ jobId: string; candidateSlug: string }>;
@@ -52,6 +55,10 @@ function getStatsFromCandidate(candidate: CandidateProfile) {
   return { avgTraitScore: avg, topTraitLabel: top.label, topTraitScore: top.score };
 }
 
+type PentagonLayout =
+  | { kind: "v2"; technical: PentagonTrait[]; behavioral: PentagonTrait[] }
+  | { kind: "v1"; traits: PentagonTrait[] };
+
 export async function RecruiterCandidateProfilePage({
   params,
 }: RecruiterCandidateProfilePageProps) {
@@ -68,12 +75,19 @@ export async function RecruiterCandidateProfilePage({
   );
   if (!isInPostingPool) notFound();
 
+  const [scorecard, summary] = await Promise.all([
+    getOrGenerateTraitScorecard(candidate),
+    getOrGenerateAISummary(candidate, candidate.recommendations),
+  ]);
+
   const experienceRows = buildExperienceRows(candidate, candidate.recommendations);
   const trustStats = buildTrustStats(candidate.recommendations);
   const relationMix = buildRelationMix(candidate.recommendations);
-  const traits = buildPentagonForRecruiter(candidate.pentagonScores, candidate.projects);
-  const summary = await getOrGenerateAISummary(candidate, candidate.recommendations);
   const stats = getStatsFromCandidate(candidate);
+
+  const pentagonLayout: PentagonLayout = scorecard
+    ? { kind: "v2", ...buildV2PentagonsForRecruiter(scorecard) }
+    : { kind: "v1", traits: buildPentagonForRecruiter(candidate.pentagonScores, candidate.projects) };
 
   return (
     <>
@@ -102,7 +116,14 @@ export async function RecruiterCandidateProfilePage({
           <ExperienceList rows={experienceRows} recommendations={candidate.recommendations} />
         </div>
         <aside className="grid gap-4 content-start">
-          <Pentagon traits={traits} />
+          {pentagonLayout.kind === "v2" ? (
+            <>
+              <Pentagon traits={pentagonLayout.technical} label="Technical · recruiter view" />
+              <Pentagon traits={pentagonLayout.behavioral} label="Behavioral · recruiter view" />
+            </>
+          ) : (
+            <Pentagon traits={pentagonLayout.traits} />
+          )}
           <TrustCard stats={trustStats} />
           <RelationMix entries={relationMix} />
           <VerifiedDomains domains={trustStats.domains} />
