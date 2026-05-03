@@ -156,9 +156,9 @@ export interface CompanyLookupService {
 export function getCompanyLookupService(): CompanyLookupService;
 ```
 
-`getCompanyLookupService()` returns the ICANN RDAP implementation when `ZOOMINFO_API_KEY` is set, otherwise the stub. The stub reads a domain→company JSON map from `RECOMMENDER_STUB_COMPANY_MAP` (env var, JSON-encoded) so demos work without ICANN RDAP credentials.
+`getCompanyLookupService()` returns a composite that consults the local stub map first and falls back to ICANN RDAP. RDAP requires no credentials. Setting `RECOMMENDER_USE_STUB_COMPANY_LOOKUP=1` short-circuits to the stub only — useful for offline demos. The stub reads a domain→company JSON map from `RECOMMENDER_STUB_COMPANY_MAP` (env var, JSON-encoded) and ships with a small built-in default for common demo domains.
 
-The ICANN RDAP implementation lives in `zoom-info.ts` next to `index.ts` and is the only file that knows about the ICANN RDAP HTTP shape. Errors and 404s from ICANN RDAP both resolve to `null` (caller treats the two identically as `company_pending`).
+The ICANN RDAP implementation lives in `icann-rdap.ts` next to `index.ts` and is the only file that knows about the RDAP JSON shape. It calls `https://rdap.org/domain/<domain>` (the bootstrap proxy that routes to the right registry) and extracts the registrant entity's vCard `org` field. Redacted/privacy-protected registrants are treated as misses. Errors and misses both resolve to `null` (caller treats the two identically as `company_pending`).
 
 ### Email service
 
@@ -193,6 +193,6 @@ RECOMMENDER_STUB_COMPANY_MAP=
 
 ## Open Questions
 
-- ICANN RDAP's actual API shape and auth (API key vs OAuth username/password) is not pinned down here. The `zoom-info.ts` module is isolated so this can be filled in once we have credentials without disturbing the rest of the flow.
+- RDAP registrant data is frequently redacted under GDPR or covered by a privacy proxy. The lookup will resolve to `company_pending` for many real domains. The built-in stub map ships with common demo companies so the hackathon walkthrough is reliable; production usage may want to layer in a paid data provider behind the same `CompanyLookupService` interface.
 - Should a `company_pending` outcome show the recommender what domain we tried to look up? Current design: yes, inline in the failure message. Reconsider if this leaks too much.
 - Resend sandbox vs production sender domain configuration is deferred to deployment-time setup.
