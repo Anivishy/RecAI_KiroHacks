@@ -8,17 +8,18 @@ import type { CandidateProfile, RecommendationSnippet } from "../lib/domain/type
 const DEFAULT_MODEL = "anthropic.claude-haiku-4-5-20251001-v1:0";
 const DEFAULT_REGION = "us-east-1";
 
-let cachedClient: BedrockRuntimeClient | null = null;
-
 function getClient() {
-  if (cachedClient) {
-    return cachedClient;
+  const accessKeyId = process.env.AWS_ACCESS_KEY_ID;
+  const secretAccessKey = process.env.AWS_SECRET_ACCESS_KEY;
+
+  if (!accessKeyId || !secretAccessKey) {
+    throw new Error("AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY must be set.");
   }
 
-  cachedClient = new BedrockRuntimeClient({
+  return new BedrockRuntimeClient({
     region: process.env.BEDROCK_REGION ?? DEFAULT_REGION,
+    credentials: { accessKeyId, secretAccessKey },
   });
-  return cachedClient;
 }
 
 function resolveModelId(modelId?: string) {
