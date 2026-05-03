@@ -1,5 +1,15 @@
 # RecAI
 
+> AI made every resume look the same. RecAI lets real candidates stand out — through verified recommendations from people who actually worked with them. Proof over polish.
+
+## Human-Centered Design Track
+
+RecAI tackles a social problem that's gotten worse with AI: the collapse of trust in hiring. When everyone can generate a polished resume in seconds, genuine candidates with real experience can't stand out, and recruiters can't tell who actually did the work. The people hurt most are candidates who earned their skills honestly — they're drowned out by AI-generated noise.
+
+RecAI is human-centered because it shifts the source of truth from self-reported claims to verified human voices. Recommenders — real managers and coworkers — prove their identity through work email verification and describe what the candidate actually did. That evidence is what recruiters see, search, and score against. The candidate can't edit what their recommenders say, and the platform never indexes candidate-authored content. This design choice puts authenticity at the center: the humans who worked with you are the ones who speak for you.
+
+By restoring trust in the hiring signal, RecAI strengthens the community of job seekers who play by the rules, improves accessibility to opportunity for candidates without brand-name credentials (a strong recommendation from a verified colleague matters more than a logo), and addresses a social problem — AI-driven credential inflation — that no existing hiring tool is solving.
+
 RecAI is a trust layer for hiring. Instead of relying only on self-reported resumes and AI-polished project descriptions, the platform lets candidates present verified recommendations from people who actually worked with them.
 
 This repo currently contains the shared project scaffold and the first web experience:
