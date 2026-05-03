@@ -28,6 +28,7 @@ import {
 } from "../server/recruiter-jobs";
 import { getOrGenerateTraitScorecard } from "../server/recruiter-trait-scoring";
 import { buildV2PentagonsForRecruiter } from "../server/v2-pentagon";
+import { buildTraitEvidenceSegments } from "@recai/shared/server/trait-scoring";
 
 type RecruiterCandidateProfilePageProps = {
   params: Promise<{ jobId: string; candidateSlug: string }>;
@@ -84,9 +85,10 @@ export async function RecruiterCandidateProfilePage({
   const trustStats = buildTrustStats(candidate.recommendations);
   const relationMix = buildRelationMix(candidate.recommendations);
   const stats = getStatsFromCandidate(candidate);
+  const evidenceSegments = buildTraitEvidenceSegments(candidate);
 
   const pentagonLayout: PentagonLayout = scorecard
-    ? { kind: "v2", ...buildV2PentagonsForRecruiter(scorecard) }
+    ? { kind: "v2", ...buildV2PentagonsForRecruiter(scorecard, evidenceSegments) }
     : { kind: "v1", traits: buildPentagonForRecruiter(candidate.pentagonScores, candidate.projects) };
 
   return (

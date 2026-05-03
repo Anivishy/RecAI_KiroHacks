@@ -150,39 +150,34 @@ export function Pentagon({ traits, label }: PentagonProps) {
         </svg>
       </div>
       <div className="border-t border-dashed border-[color:var(--hairline)] px-5 py-3 text-[13px]">
-        {activeTrait && (activeTrait.rationale ?? activeTrait.projects[0]) ? (
-          <>
-            <div className="flex items-center justify-between gap-3 text-[11px]">
-              <Mono className="uppercase tracking-[0.08em] text-[color:var(--ink-3)]">
-                {activeTrait.rationale ? `${activeTrait.name} · reasoning` : `Top match · ${activeTrait.name}`}
+        {activeTrait ? (
+          <div className="grid gap-3">
+            <div className="flex items-center justify-between gap-3">
+              <Mono className="text-[11px] uppercase tracking-[0.08em] text-[color:var(--ink-3)]">
+                {activeTrait.name} · bedrock scoring
               </Mono>
-              {activeTrait.rationale && activeTrait.confidence !== undefined ? (
-                <Mono className="text-[color:var(--verified)]">
+              {activeTrait.confidence !== undefined ? (
+                <Mono className="text-[11px] text-[color:var(--verified)]">
                   {activeTrait.confidence}/100 conf
                 </Mono>
-              ) : activeTrait.projects[0] ? (
-                <Mono className="text-[color:var(--verified)]">
-                  {activeTrait.projects[0].similarity.toFixed(2)} sim
+              ) : null}
+            </div>
+            {activeTrait.rationale ? (
+              <p className="text-[13px] leading-5 text-[color:var(--ink-2)]">
+                {activeTrait.rationale}
+              </p>
+            ) : null}
+            {activeTrait.projects[0] ? (
+              <div className="rounded-[var(--r-md)] border border-[color:var(--hairline)] bg-[color:var(--surface-2)] px-3 py-2.5">
+                <Mono className="text-[10px] uppercase tracking-[0.08em] text-[color:var(--ink-3)]">
+                  {activeTrait.projects[0].name}
                 </Mono>
-              ) : null}
-            </div>
-            <div className="mt-1.5">
-              {activeTrait.rationale ? (
-                <p className="mt-1 line-clamp-4 text-[13px] leading-5 text-[color:var(--ink-2)]">
-                  {activeTrait.rationale}
+                <p className="mt-1 line-clamp-4 text-[12px] leading-5 text-[color:var(--ink-2)]">
+                  {activeTrait.projects[0].description}
                 </p>
-              ) : activeTrait.projects[0] ? (
-                <>
-                  <strong className="text-[13px] text-[color:var(--ink)]">
-                    {activeTrait.projects[0].name}
-                  </strong>
-                  <p className="mt-1 line-clamp-3 text-[13px] leading-5 text-[color:var(--ink-2)]">
-                    {activeTrait.projects[0].description}
-                  </p>
-                </>
-              ) : null}
-            </div>
-          </>
+              </div>
+            ) : null}
+          </div>
         ) : (
           <Mono className="text-[12px] text-[color:var(--ink-4)]">
             // hover a vertex to inspect
