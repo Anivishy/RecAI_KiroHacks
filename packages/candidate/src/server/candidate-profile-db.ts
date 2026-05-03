@@ -180,6 +180,15 @@ function buildRecommendationSnippets(
       projectTitles: recommendation.projects
         .map((project) => project.title.trim())
         .filter(Boolean),
+      technicalResponse: recommendation.technicalResponse.trim(),
+      behavioralResponse: recommendation.behavioralResponse.trim(),
+      projects: recommendation.projects
+        .filter((p) => p.title.trim())
+        .map((p) => ({
+          title: p.title.trim(),
+          description: p.description.trim(),
+          skills: p.skills,
+        })),
     };
   });
 }

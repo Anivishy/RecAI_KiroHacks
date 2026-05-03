@@ -4,7 +4,6 @@ import * as Icons from "../components/icons";
 import { Mono } from "../components/mono";
 import { TopNav } from "../components/top-nav";
 import { appRoutes } from "../lib/routes";
-import { sampleCandidateProfiles, sampleJobPosting } from "../lib/domain/mock-data";
 
 const flowSteps = [
   {
@@ -28,7 +27,6 @@ const flowSteps = [
 ];
 
 export function LandingPage() {
-  const featured = sampleCandidateProfiles[0];
   return (
     <>
       <TopNav viewer={{ role: "guest" }} showSearch={false} />
@@ -141,19 +139,19 @@ export function LandingPage() {
           <CardPad>
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="rounded-[var(--r-md)] border border-[color:var(--hairline)] bg-[color:var(--surface-2)] px-4 py-3">
-                <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-[color:var(--ink-3)]">Featured posting</p>
-                <h3 className="mt-1 text-[16px] font-semibold text-[color:var(--ink)]">{sampleJobPosting.title}</h3>
+                <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-[color:var(--ink-3)]">How it works</p>
+                <h3 className="mt-1 text-[16px] font-semibold text-[color:var(--ink)]">Posting-scoped candidate pools</h3>
                 <p className="mt-1 text-[13px] text-[color:var(--ink-2)]">
-                  {sampleJobPosting.team} team · {sampleJobPosting.location} · {sampleJobPosting.candidatePoolSize} opted-in candidates
+                  Each job posting has its own opt-in pool — recruiters search only candidates who chose to apply.
                 </p>
               </div>
               <div className="rounded-[var(--r-md)] border border-[color:var(--hairline)] bg-[color:var(--surface-2)] px-4 py-3">
-                <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-[color:var(--ink-3)]">Featured profile</p>
+                <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-[color:var(--ink-3)]">Get started</p>
                 <Link
                   className="mt-1 inline-flex items-center gap-1 text-[15px] font-semibold text-[color:var(--verified)] hover:text-[color:var(--verified-2)]"
-                  href={appRoutes.publicCandidateProfile(featured.slug)}
+                  href={appRoutes.candidateSignIn}
                 >
-                  View {featured.fullName}'s profile <Icons.ArrowRight />
+                  Build your candidate profile <Icons.ArrowRight />
                 </Link>
               </div>
             </div>

@@ -9,9 +9,11 @@ import {
   buildRelationMix,
   buildTrustStats,
 } from "@recai/shared";
+import { CandidateSummaryCard } from "../components/profile/candidate-summary-card";
 import { ExperienceList } from "../components/profile/experience-list";
 import { HeroCard, type HeroLink } from "../components/profile/hero-card";
 import { getCandidateProfileBySlug } from "../server/candidate-profile-db";
+import { getOrGenerateProfileSummary } from "../server/candidate-summary";
 
 type CandidateProfilePageProps = {
   params: Promise<{ candidateSlug: string }>;
@@ -29,6 +31,10 @@ export async function CandidateProfilePage({ params }: CandidateProfilePageProps
   const { candidateSlug } = await params;
   const candidate = await getCandidateProfileBySlug(candidateSlug);
   if (!candidate) notFound();
+
+  const [profileSummary] = await Promise.all([
+    getOrGenerateProfileSummary(candidate, candidate.recommendations),
+  ]);
 
   const experienceRows = buildExperienceRows(candidate, candidate.recommendations);
   const trustStats = buildTrustStats(candidate.recommendations);
@@ -48,6 +54,7 @@ export async function CandidateProfilePage({ params }: CandidateProfilePageProps
             joinedLabel={`${candidate.yearsExperience}+ yrs experience`}
             contactLinks={contactLinks}
           />
+          {profileSummary ? <CandidateSummaryCard summary={profileSummary} /> : null}
           <ExperienceList rows={experienceRows} recommendations={candidate.recommendations} />
         </div>
         <aside className="grid gap-4 content-start">

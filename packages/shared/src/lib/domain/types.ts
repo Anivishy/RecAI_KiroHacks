@@ -44,6 +44,12 @@ export interface CandidateProject {
   matchedTraits: PentagonTraitId[];
 }
 
+export interface RecommendationSnippetProject {
+  title: string;
+  description: string;
+  skills: string[];
+}
+
 export interface RecommendationSnippet {
   id: string;
   recommenderName: string;
@@ -54,6 +60,9 @@ export interface RecommendationSnippet {
   summary: string;
   skillsMentioned: string[];
   projectTitles: string[];
+  technicalResponse: string;
+  behavioralResponse: string;
+  projects: RecommendationSnippetProject[];
 }
 
 export interface CandidateProfile {

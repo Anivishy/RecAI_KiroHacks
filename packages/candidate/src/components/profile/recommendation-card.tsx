@@ -33,7 +33,7 @@ export function RecommendationCard({ rec }: RecommendationCardProps) {
   const [tab, setTab] = useState<"overview" | "projects">("overview");
   const brand = recommenderBrandColor(rec.company);
   const domain = companyToDomain(rec.company);
-  const projects = rec.projectTitles ?? [];
+  const projects = rec.projects ?? [];
 
   return (
     <article className="rounded-[var(--r-lg)] border border-[color:var(--hairline)] bg-[color:var(--surface)]">
@@ -97,10 +97,21 @@ export function RecommendationCard({ rec }: RecommendationCardProps) {
       <div className="px-5 py-4 text-[14px] leading-6 text-[color:var(--ink-2)]">
         {tab === "overview" ? (
           <div className="grid gap-4">
-            <section>
-              <h5 className="text-[11px] font-semibold uppercase tracking-[0.12em] text-[color:var(--ink-3)]">Technical feedback</h5>
-              <p className="mt-1.5 whitespace-pre-line">{rec.summary}</p>
-            </section>
+            {rec.technicalResponse ? (
+              <section>
+                <h5 className="text-[11px] font-semibold uppercase tracking-[0.12em] text-[color:var(--ink-3)]">Technical</h5>
+                <p className="mt-1.5 whitespace-pre-line">{rec.technicalResponse}</p>
+              </section>
+            ) : null}
+            {rec.behavioralResponse ? (
+              <section>
+                <h5 className="text-[11px] font-semibold uppercase tracking-[0.12em] text-[color:var(--ink-3)]">Working style</h5>
+                <p className="mt-1.5 whitespace-pre-line">{rec.behavioralResponse}</p>
+              </section>
+            ) : null}
+            {!rec.technicalResponse && !rec.behavioralResponse ? (
+              <p className="whitespace-pre-line">{rec.summary}</p>
+            ) : null}
             {rec.skillsMentioned.length > 0 ? (
               <section>
                 <h5 className="text-[11px] font-semibold uppercase tracking-[0.12em] text-[color:var(--ink-3)]">Skills mentioned</h5>
@@ -122,15 +133,32 @@ export function RecommendationCard({ rec }: RecommendationCardProps) {
             {projects.length > 0 ? (
               projects.map((project, idx) => (
                 <div
-                  key={`${project}-${idx}`}
+                  key={`${project.title}-${idx}`}
                   className="rounded-[var(--r-md)] border border-[color:var(--hairline)] bg-[color:var(--surface-2)] px-4 py-3"
                 >
                   <div className="flex items-center justify-between gap-3">
-                    <strong className="text-[14px] text-[color:var(--ink)]">{project}</strong>
+                    <strong className="text-[14px] text-[color:var(--ink)]">{project.title}</strong>
                     <Mono className="text-[11px] text-[color:var(--ink-3)]">
                       // project {String(idx + 1).padStart(2, "0")}
                     </Mono>
                   </div>
+                  {project.description ? (
+                    <p className="mt-2 text-[13px] leading-5 text-[color:var(--ink-2)]">
+                      {project.description}
+                    </p>
+                  ) : null}
+                  {project.skills.length > 0 ? (
+                    <div className="mt-2 flex flex-wrap gap-1.5">
+                      {project.skills.map((skill) => (
+                        <span
+                          key={skill}
+                          className="rounded-full border border-[color:var(--hairline)] bg-[color:var(--surface)] px-2 py-0.5 text-[11px] text-[color:var(--ink-3)]"
+                        >
+                          {skill}
+                        </span>
+                      ))}
+                    </div>
+                  ) : null}
                 </div>
               ))
             ) : (

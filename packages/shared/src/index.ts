@@ -1,12 +1,3 @@
-export {
-  getCandidateProfileBySlug,
-  getRecruiterCandidateReview,
-  sampleCandidateProfiles,
-  sampleJobPosting,
-  sampleRecruiterCandidateReviews,
-  sampleRecommendationRequest,
-  sampleRecruiter,
-} from "./lib/domain/mock-data";
 export { pentagonTraitMeta } from "./lib/domain/types";
 export type {
   CandidateAccount,
@@ -19,6 +10,7 @@ export type {
   RecruiterCandidateReview,
   RecommendationRequestPreview,
   RecommendationSnippet,
+  RecommendationSnippetProject,
   RecruiterAccount,
   RecruiterTraitEvidence,
 } from "./lib/domain/types";
