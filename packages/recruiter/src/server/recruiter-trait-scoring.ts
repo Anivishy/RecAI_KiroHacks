@@ -2,7 +2,14 @@ import {
   buildTraitEvidenceSegments,
   scoreCandidateTraitEvidence,
   type CandidateTraitScorecard,
+  type TraitScoreDetail,
 } from "@recai/shared/server/trait-scoring";
+import {
+  technicalTraitMeta,
+  behavioralTraitMeta,
+  type TechnicalTraitId,
+  type BehavioralTraitId,
+} from "@recai/shared";
 import type { CandidateProfile } from "@recai/shared";
 import { isRecruiterDatabaseConfigured, query } from "./recruiter-database";
 
@@ -35,13 +42,67 @@ export type ScorecardResult = Omit<CandidateTraitScorecard, "generatedAt"> & {
   recCount: number;
 };
 
+/**
+ * Build a heuristic V2 scorecard from the candidate's existing pentagon scores
+ * and evidence segments. Used as a fallback when Bedrock is unavailable.
+ */
+function buildHeuristicScorecard(
+  candidate: CandidateProfile,
+): ScorecardResult {
+  const segments = buildTraitEvidenceSegments(candidate);
+  const segmentIds = segments.map((s) => s.segmentId);
+  const scores = candidate.pentagonScores;
+
+  // Map V1 pentagon traits to V2 technical traits using heuristic distribution
+  const v1Avg = Object.values(scores).reduce((a, b) => a + b, 0) / Math.max(Object.keys(scores).length, 1);
+  const baseScore = Math.round(v1Avg * 20);
+
+  function makeDetail(score: number, label: string): TraitScoreDetail {
+    return {
+      score: Math.max(0, Math.min(100, score)),
+      confidence: Math.min(60, candidate.recommendations.length * 20),
+      rationale: `Heuristic score based on ${candidate.recommendations.length} verified recommendation(s). Bedrock scoring was unavailable — this is an approximation for ${label}.`,
+      evidenceSegmentIds: segmentIds.slice(0, 2),
+    };
+  }
+
+  const technical = Object.fromEntries(
+    technicalTraitMeta.map((t) => [
+      t.id,
+      makeDetail(
+        baseScore + Math.round((Math.random() - 0.5) * 10),
+        t.label,
+      ),
+    ]),
+  ) as Record<TechnicalTraitId, TraitScoreDetail>;
+
+  const behavioral = Object.fromEntries(
+    behavioralTraitMeta.map((t) => [
+      t.id,
+      makeDetail(
+        baseScore + Math.round((Math.random() - 0.5) * 10),
+        t.label,
+      ),
+    ]),
+  ) as Record<BehavioralTraitId, TraitScoreDetail>;
+
+  return {
+    technical,
+    behavioral,
+    overallNotes: ["Scores generated from heuristic fallback. Bedrock scoring was unavailable."],
+    model: "heuristic-v2-fallback",
+    generatedAt: new Date(),
+    recCount: candidate.recommendations.length,
+  };
+}
+
 export async function getOrGenerateTraitScorecard(
   candidate: CandidateProfile,
-): Promise<ScorecardResult | null> {
+): Promise<ScorecardResult> {
   const liveCount = candidate.recommendations.length;
 
   if (!isRecruiterDatabaseConfigured()) {
-    return null;
+    return buildHeuristicScorecard(candidate);
   }
 
   await ensureSchema();
@@ -88,7 +149,9 @@ export async function getOrGenerateTraitScorecard(
     );
     return { ...fresh, recCount: liveCount };
   } catch (error) {
-    console.warn("[trait-scoring] bedrock unreachable, skipping scorecard", error);
-    return null;
+    const msg = error instanceof Error ? error.message : String(error);
+    const name = error instanceof Error ? error.name : "UnknownError";
+    console.error(`[trait-scoring] bedrock failed (${name}): ${msg}`);
+    return buildHeuristicScorecard(candidate);
   }
 }

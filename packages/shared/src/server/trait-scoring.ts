@@ -288,7 +288,7 @@ export async function scoreCandidateTraitEvidence(
     systemPrompt:
       "You are a recruiter-facing evidence scoring assistant. Evaluate only externally verified recommendation evidence. Never use candidate self-claims or unstated assumptions.",
     userPrompt: buildScoringPrompt(input),
-    maxTokens: 1800,
+    maxTokens: 4000,
     temperature: 0,
   });
 
