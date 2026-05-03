@@ -8,7 +8,7 @@ type SearchResult = {
   candidateSlug: string;
   candidateName: string;
   score: number;
-  chunks: string[];
+  snippet: string;
 };
 
 type DefaultCandidate = {
@@ -65,7 +65,7 @@ export function CandidateSearch({ jobId, defaultCandidates }: CandidateSearchPro
   ];
 
   const showingFiltered = results !== null;
-  const displayList: (DefaultCandidate & { score?: number; chunks?: string[] })[] =
+  const displayList: (DefaultCandidate & { score?: number; snippet?: string })[] =
     showingFiltered ? results : defaultCandidates;
 
   return (
@@ -154,8 +154,8 @@ export function CandidateSearch({ jobId, defaultCandidates }: CandidateSearchPro
                   </div>
                   <div className="flex items-center gap-3">
                     {r.score !== undefined ? (
-                      <span className="mono text-xs text-[color:var(--ink-3)]">
-                        {(r.score * 100).toFixed(0)}% match
+                      <span className="mono text-xs text-[color:var(--verified)] font-semibold">
+                        {r.score}% match
                       </span>
                     ) : null}
                     <span className="text-xs font-semibold text-[color:var(--ink)]">
@@ -163,18 +163,11 @@ export function CandidateSearch({ jobId, defaultCandidates }: CandidateSearchPro
                     </span>
                   </div>
                 </div>
-                {r.chunks && r.chunks.length > 0 && (
-                  <ul className="flex flex-col gap-1">
-                    {r.chunks.map((chunk, i) => (
-                      <li
-                        className="rounded-lg bg-[color:var(--surface-2)] px-3 py-2 text-xs text-[color:var(--ink-3)] leading-relaxed"
-                        key={i}
-                      >
-                        {chunk}
-                      </li>
-                    ))}
-                  </ul>
-                )}
+                {r.snippet ? (
+                  <p className="mt-1 text-xs leading-relaxed text-[color:var(--ink-3)] italic">
+                    {r.snippet}
+                  </p>
+                ) : null}
               </Link>
             ))}
           </div>

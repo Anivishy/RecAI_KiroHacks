@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import {
@@ -19,8 +20,8 @@ import { ExperienceList } from "@recai/candidate/components/profile/experience-l
 import { HeroCard } from "@recai/candidate/components/profile/hero-card";
 import { getCandidateProfileBySlug } from "@recai/candidate/server/candidate-profile-db";
 import { Pentagon } from "../components/rail/pentagon";
-import { RecruiterAISummary } from "../components/rail/recruiter-ai-summary";
-import { getOrGenerateAISummary } from "../server/ai-summary";
+import { RecruiterAISummaryLoader } from "../components/rail/recruiter-ai-summary-loader";
+import { RecruiterAISummarySkeleton } from "../components/rail/recruiter-ai-summary-skeleton";
 import { requireRecruiterSession } from "../server/recruiter-auth";
 import {
   getJobPostingById,
@@ -76,9 +77,8 @@ export async function RecruiterCandidateProfilePage({
   );
   if (!isInPostingPool) notFound();
 
-  const [scorecard, summary] = await Promise.all([
+  const [scorecard] = await Promise.all([
     getOrGenerateTraitScorecard(candidate),
-    getOrGenerateAISummary(candidate, candidate.recommendations),
   ]);
 
   const experienceRows = buildExperienceRows(candidate, candidate.recommendations);
@@ -114,7 +114,9 @@ export async function RecruiterCandidateProfilePage({
             joinedLabel={`${candidate.yearsExperience}+ yrs experience`}
             contactLinks={[]}
           />
-          <RecruiterAISummary summary={summary} stats={stats} />
+          <Suspense fallback={<RecruiterAISummarySkeleton stats={stats} />}>
+            <RecruiterAISummaryLoader candidate={candidate} stats={stats} />
+          </Suspense>
           <ExperienceList rows={experienceRows} recommendations={candidate.recommendations} />
         </div>
         <aside className="grid gap-4 content-start">

@@ -4,6 +4,7 @@ import {
   getCandidateProfileBySlug,
 } from "@recai/candidate/server/candidate-profile-db";
 import type { CandidateProfile } from "@recai/shared";
+import { generateBedrockJson } from "@recai/shared/server/bedrock-client";
 import { getPostingIdsForCandidate } from "./recruiter-jobs";
 
 const INDEX_NAME = "candidate-profile-index";
@@ -107,18 +108,83 @@ export type CandidateSearchContext = {
   candidateSlug: string;
   candidateName: string;
   score: number;
-  chunks: string[];
+  snippet: string;
 };
+
+type RawChunkHit = {
+  slug: string;
+  name: string;
+  vectorScore: number;
+  text: string;
+};
+
+type BedrockRanking = {
+  rankings: Array<{ slug: string; score: number; snippet: string }>;
+};
+
+function truncate(text: string, max = 220): string {
+  const cleaned = text.replace(/\s+/g, " ").trim();
+  if (cleaned.length <= max) return cleaned;
+  const cut = cleaned.slice(0, max);
+  const lastSpace = cut.lastIndexOf(" ");
+  return `${cut.slice(0, lastSpace > 100 ? lastSpace : max)}…`;
+}
+
+async function bedrockRerank(
+  query: string,
+  candidates: Map<string, { name: string; topChunks: string[] }>,
+): Promise<Map<string, { score: number; snippet: string }>> {
+  const candidateBlock = Array.from(candidates.entries())
+    .map(([slug, c]) => {
+      const evidence = c.topChunks.map((t) => `  - ${truncate(t)}`).join("\n");
+      return `Candidate slug: ${slug}\nName: ${c.name}\nEvidence:\n${evidence}`;
+    })
+    .join("\n\n");
+
+  const prompt = [
+    `Search query: "${query}"`,
+    "",
+    "For each candidate below, score 0-100 how specifically their verified evidence matches this query.",
+    "Be strict: only score above 70 when the evidence directly addresses the query.",
+    "Write one short sentence (under 20 words) citing the specific evidence that best matches the query.",
+    "Do not mention the candidate's name in the snippet.",
+    "",
+    candidateBlock,
+    "",
+    'Return ONLY valid JSON: { "rankings": [{ "slug": "...", "score": 0, "snippet": "..." }] }',
+  ].join("\n");
+
+  try {
+    const { data } = await generateBedrockJson<BedrockRanking>({
+      systemPrompt: "You are a precise recruiter search assistant. Rank candidates strictly by how well their verified recommendation evidence matches the search query.",
+      userPrompt: prompt,
+      maxTokens: 800,
+      temperature: 0,
+    });
+
+    const resultMap = new Map<string, { score: number; snippet: string }>();
+    for (const r of data.rankings ?? []) {
+      if (typeof r.slug === "string" && typeof r.score === "number") {
+        resultMap.set(r.slug, {
+          score: Math.max(0, Math.min(100, Math.round(r.score))),
+          snippet: typeof r.snippet === "string" ? r.snippet.trim() : "",
+        });
+      }
+    }
+    return resultMap;
+  } catch {
+    return new Map();
+  }
+}
 
 export async function searchCandidatePool(
   jobId: string,
   queryText: string,
-  topK = 20,
+  topK = 30,
 ): Promise<CandidateSearchContext[]> {
   const index = await ensureIndex();
   const ns = index.namespace(jobId);
 
-  // Lazy-index on first search
   const stats = await index.describeIndexStats();
   const vectorCount =
     (stats as { namespaces?: Record<string, { vectorCount?: number }> })
@@ -129,32 +195,55 @@ export async function searchCandidatePool(
   }
 
   const results = await ns.searchRecords({
-    query: {
-      topK,
-      inputs: { text: queryText },
-    },
+    query: { topK, inputs: { text: queryText } },
     fields: ["candidateSlug", "candidateName", "chunkType", "text"],
   });
 
-  const byCandidate = new Map<string, CandidateSearchContext>();
+  // Group hits by candidate, keeping the top-scoring chunks per candidate
+  const hitsByCandidate = new Map<string, { name: string; hits: RawChunkHit[] }>();
 
   for (const match of results.result?.hits ?? []) {
     const fields = match.fields as Record<string, string> | undefined;
     const slug = fields?.candidateSlug ?? "";
     const name = fields?.candidateName ?? "";
     const text = fields?.text ?? "";
-    const score = match._score ?? 0;
+    const vectorScore = match._score ?? 0;
+    if (!slug || !text) continue;
 
-    if (!byCandidate.has(slug)) {
-      byCandidate.set(slug, { candidateSlug: slug, candidateName: name, score, chunks: [] });
+    if (!hitsByCandidate.has(slug)) {
+      hitsByCandidate.set(slug, { name, hits: [] });
     }
-
-    const entry = byCandidate.get(slug)!;
-    entry.score = Math.max(entry.score, score);
-    if (text) entry.chunks.push(text);
+    hitsByCandidate.get(slug)!.hits.push({ slug, name, vectorScore, text });
   }
 
-  return Array.from(byCandidate.values()).sort((a, b) => b.score - a.score);
+  if (hitsByCandidate.size === 0) return [];
+
+  // Build candidate map with top 3 chunks by vector score for Bedrock
+  const candidatesForRanking = new Map<string, { name: string; topChunks: string[] }>();
+  for (const [slug, { name, hits }] of hitsByCandidate) {
+    const topChunks = hits
+      .sort((a, b) => b.vectorScore - a.vectorScore)
+      .slice(0, 3)
+      .map((h) => h.text);
+    candidatesForRanking.set(slug, { name, topChunks });
+  }
+
+  const rerankResults = await bedrockRerank(queryText, candidatesForRanking);
+
+  // Merge: use Bedrock score when available, fall back to best vector score
+  return Array.from(hitsByCandidate.entries())
+    .map(([slug, { name, hits }]) => {
+      const reranked = rerankResults.get(slug);
+      const bestVectorScore = Math.max(...hits.map((h) => h.vectorScore));
+      return {
+        candidateSlug: slug,
+        candidateName: name,
+        score: reranked?.score ?? Math.round(bestVectorScore * 100),
+        snippet: reranked?.snippet ?? truncate(hits.sort((a, b) => b.vectorScore - a.vectorScore)[0]?.text ?? ""),
+      };
+    })
+    .filter((c) => c.score > 0)
+    .sort((a, b) => b.score - a.score);
 }
 
 export async function reindexCandidateAcrossPostings(
